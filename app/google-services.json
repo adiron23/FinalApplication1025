@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "612351315773",
+    "project_id": "adis-firebase",
+    "storage_bucket": "adis-firebase.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612351315773:android:907eb8176117fafd083f54",
+        "android_client_info": {
+          "package_name": "com.example.finalapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBokGPFLSDxwYuGIMPU_AjSQeQl_ftWcSc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
