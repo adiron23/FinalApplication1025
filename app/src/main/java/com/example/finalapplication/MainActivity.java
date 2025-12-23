@@ -1,40 +1,30 @@
 package com.example.finalapplication;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.firebase.auth.FirebaseAuth;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity { // יורש מ-BaseActivity
 
     private TextView tVWelcome;
     private Button btnLogout;
-    private FirebaseAuth refAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // מפעיל את התפריט שהגדרנו ב-BaseActivity
+        setupDrawer();
+
         tVWelcome = findViewById(R.id.tVWelcome);
         btnLogout = findViewById(R.id.btnLogout);
-        refAuth = FirebaseAuth.getInstance();
 
+        // הצגת שם המשתמש
         String name = getIntent().getStringExtra("name");
-        if (name != null && !name.isEmpty()) {
-            tVWelcome.setText("Welcome, " + name);
-        } else {
-            tVWelcome.setText("Welcome");
-        }
+        tVWelcome.setText((name != null && !name.isEmpty()) ? "Welcome, " + name : "Welcome");
 
-        btnLogout.setOnClickListener(v -> {
-            refAuth.signOut();
-            startActivity(new Intent(MainActivity.this, LogInActivity.class));
-            finish();
-        });
+        // כפתור הלוגאאוט משתמש בפונקציה שנמצאת ב-BaseActivity
+        btnLogout.setOnClickListener(v -> logoutUser());
     }
 }
