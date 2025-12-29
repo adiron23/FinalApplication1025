@@ -3,11 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="#FFFFFF"
+    android:background="#F5F7FA"
     tools:context=".LogInActivity">
 
     <TextView
@@ -15,97 +13,78 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="התחברות"
-        android:textSize="28sp"
+        android:textSize="36sp"
         android:textStyle="bold"
-        android:textColor="#000000"
-        android:layout_marginTop="8dp"
+        android:textColor="#1A237E"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <EditText
-        android:id="@+id/eTEmail"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="#E8E8E8"
-        android:hint="  אימייל"
-        android:inputType="textEmailAddress"
-        android:textColor="#000000"
-        android:textColorHint="#444444"
-        app:layout_constraintTop_toBottomOf="@id/titleLogin"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <EditText
-        android:id="@+id/eTPass"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:background="#E8E8E8"
-        android:hint="  סיסמה"
-        android:gravity="right"
-        android:inputType="textPassword"
-        android:textColor="#000000"
-        android:textColorHint="#444444"
-        app:layout_constraintTop_toBottomOf="@id/eTEmail"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <CheckBox
-        android:id="@+id/cBStayConnected"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="70dp"
-        android:layout_marginTop="16dp"
-        android:text="תשאר מחובר"
-        android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.911"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/eTPass" />
+        android:layout_marginTop="80dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="אימייל"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:layout_constraintTop_toBottomOf="@id/titleLogin"
+        android:layout_margin="24dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/eTEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/passwordLayoutWrap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="סיסמה"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:passwordToggleEnabled="true"
+        app:layout_constraintTop_toBottomOf="@id/titleLogin"
+        android:layout_marginTop="100dp"
+        android:layout_marginHorizontal="24dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/eTPass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/tVMsg"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:text=""
         android:textColor="#FF0000"
-        app:layout_constraintTop_toBottomOf="@id/cBStayConnected"
+        app:layout_constraintTop_toBottomOf="@id/passwordLayoutWrap"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"/>
 
     <Button
         android:id="@+id/createUser"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:backgroundTint="#000000"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
         android:text="התחבר"
+        android:backgroundTint="#1A237E"
         android:textColor="#FFFFFF"
-        android:onClick="createUser"
+        app:cornerRadius="28dp"
         app:layout_constraintTop_toBottomOf="@id/tVMsg"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_margin="24dp"
+        android:onClick="createUser"/>
 
-    <Button
+    <TextView
         android:id="@+id/tVGoToRegister"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:backgroundTint="#000000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="לא רשום? הרשם כאן"
-        android:textColor="#FFFFFF"
+        android:textColor="#1A237E"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:padding="12dp"
         app:layout_constraintTop_toBottomOf="@id/createUser"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>

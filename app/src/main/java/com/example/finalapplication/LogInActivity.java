@@ -4,19 +4,14 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.*;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.auth.*;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LogInActivity extends AppCompatActivity {
 
     private EditText eTEmail, eTPass;
-    private TextView tVMsg, tVGoToRegister;
+    private TextView tVMsg, tVGoToRegister; // חייב להיות TextView
     private Button createUser;
-    private CheckBox cBStayConnected;
-
     private FirebaseAuth refAuth;
 
     @Override
@@ -24,18 +19,19 @@ public class LogInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // אתחול רכיבים
         eTEmail = findViewById(R.id.eTEmail);
         eTPass = findViewById(R.id.eTPass);
         tVMsg = findViewById(R.id.tVMsg);
         createUser = findViewById(R.id.createUser);
-        cBStayConnected = findViewById(R.id.cBStayConnected);
         tVGoToRegister = findViewById(R.id.tVGoToRegister);
 
         refAuth = FirebaseAuth.getInstance();
 
-        tVGoToRegister.setOnClickListener(v ->
-                startActivity(new Intent(LogInActivity.this, RegisterActivity.class))
-        );
+        tVGoToRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LogInActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
 
         createUser.setOnClickListener(v -> loginUser());
     }
@@ -57,28 +53,12 @@ public class LogInActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     pd.dismiss();
                     if (task.isSuccessful()) {
-                        FirebaseUser user = refAuth.getCurrentUser();
-                        String uid = user.getUid();
-
-                        // שליפת שם מה-Firestore
-                        FirebaseFirestore db = FirebaseFirestore.getInstance();
-                        db.collection("users").document(uid).get()
-                                .addOnSuccessListener(documentSnapshot -> {
-                                    String name = documentSnapshot.getString("name");
-                                    Intent si = new Intent(LogInActivity.this, MainActivity.class);
-                                    si.putExtra("name", name);
-                                    startActivity(si);
-                                    finish();
-                                })
-                                .addOnFailureListener(e -> {
-                                    // במקרה של שגיאה, נשלח את האימייל
-                                    Intent si = new Intent(LogInActivity.this, MainActivity.class);
-                                    si.putExtra("name", email);
-                                    startActivity(si);
-                                    finish();
-                                });
+                        Intent intent = new Intent(LogInActivity.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        finish();
                     } else {
-                        tVMsg.setText("דוא״ל או סיסמה שגויים");
+                        tVMsg.setText("שגיאה: " + task.getException().getMessage());
                     }
                 });
     }

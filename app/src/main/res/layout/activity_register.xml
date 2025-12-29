@@ -2,118 +2,146 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
-    android:background="#FFFFFF"
-    tools:context=".RegisterActivity">
+    android:background="#F5F7FA"
+    android:fillViewport="true">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:padding="24dp">
 
         <TextView
             android:id="@+id/titleSignUp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="הרשמה"
-            android:textSize="28sp"
+            android:textSize="36sp"
             android:textStyle="bold"
-            android:textColor="#000000"
-            android:layout_marginTop="8dp" />
+            android:textColor="#1A237E"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="20dp"/>
 
         <ImageView
             android:id="@+id/profileImageView"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginTop="16dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="20dp"
             android:src="@drawable/ic_person"
-            android:background="#E8E8E8"
-            android:scaleType="centerCrop" />
+            android:background="#E1E1E1"
+            app:layout_constraintTop_toBottomOf="@id/titleSignUp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <Button
             android:id="@+id/btnSelectImage"
+            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="בחר תמונה"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="#000000"
-            android:textColor="#FFFFFF"/>
+            android:textColor="#1A237E"
+            app:layout_constraintTop_toBottomOf="@id/profileImageView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-        <EditText
-            android:id="@+id/eTName"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/nameLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:background="#E8E8E8"
-            android:hint="  שם או כינוי"
-            android:inputType="textPersonName"
-            android:textColor="#000000"
-            android:textColorHint="#444444" />
+            android:layout_height="wrap_content"
+            android:hint="שם או כינוי"
+            app:layout_constraintTop_toBottomOf="@id/btnSelectImage"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/eTName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/eTBirth"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/birthLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
+            android:layout_height="wrap_content"
             android:hint="תאריך לידה"
-            android:background="#E8E8E8"
-            android:padding="10dp"
-            android:focusable="false"
-            android:clickable="true"/>
+            app:layout_constraintTop_toBottomOf="@id/nameLayout"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/eTBirth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:clickable="true"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/eTEmail"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailRegLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:background="#E8E8E8"
-            android:hint="  אימייל"
-            android:inputType="textEmailAddress"
-            android:textColor="#000000"
-            android:textColorHint="#444444" />
+            android:layout_height="wrap_content"
+            android:hint="אימייל"
+            app:layout_constraintTop_toBottomOf="@id/birthLayout"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/eTEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <EditText
-            android:id="@+id/eTPass"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/passRegLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:background="#E8E8E8"
-            android:hint=" סיסמה"
-            android:gravity="right"
-            android:inputType="textPassword"
-            android:textColor="#000000"
-            android:textColorHint="#444444" />
+            android:layout_height="wrap_content"
+            android:hint="סיסמה"
+            app:passwordToggleEnabled="true"
+            app:layout_constraintTop_toBottomOf="@id/emailRegLayout"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/eTPass"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/tVMsg"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:textColor="#FF0000"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/passRegLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
         <Button
             android:id="@+id/createUser"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#000000"
+            android:layout_height="56dp"
             android:text="הרשם"
-            android:textColor="#FFFFFF" />
+            android:backgroundTint="#1A237E"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="28dp"
+            app:layout_constraintTop_toBottomOf="@id/tVMsg"
+            android:layout_marginTop="16dp"/>
 
-
-        <Button
+        <TextView
             android:id="@+id/btnGoToLogin"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="#000000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="מחובר? התחבר כאן"
-            android:textColor="#FFFFFF" />
+            android:textColor="#1A237E"
+            android:textStyle="bold"
+            android:padding="12dp"
+            app:layout_constraintTop_toBottomOf="@id/createUser"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="24dp"/>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

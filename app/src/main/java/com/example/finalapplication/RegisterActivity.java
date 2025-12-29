@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -21,7 +22,8 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText eTEmail, eTPass, eTName, eTBirth;
     private TextView tVMsg;
-    private Button createUser, btnSelectImage, tVGoToLogin;
+    private TextView btnGoToLogin; // שונה ל-TextView כדי להתאים ל-XML החדש
+    private Button createUser, btnSelectImage;
     private ImageView profileImageView;
     private FirebaseAuth refAuth;
     private FirebaseFirestore db;
@@ -33,6 +35,7 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        // אתחול רכיבים - וודאי שה-ID תואמים ל-XML החדש ששלחתי
         eTEmail = findViewById(R.id.eTEmail);
         eTPass = findViewById(R.id.eTPass);
         eTName = findViewById(R.id.eTName);
@@ -41,21 +44,20 @@ public class RegisterActivity extends AppCompatActivity {
         createUser = findViewById(R.id.createUser);
         btnSelectImage = findViewById(R.id.btnSelectImage);
         profileImageView = findViewById(R.id.profileImageView);
-        tVGoToLogin = findViewById(R.id.btnGoToLogin);
+        btnGoToLogin = findViewById(R.id.btnGoToLogin); // עכשיו זה מוצא TextView
 
         refAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
         btnSelectImage.setOnClickListener(v -> openImageChooser());
         createUser.setOnClickListener(v -> registerUser());
-        tVGoToLogin.setOnClickListener(v -> {
+
+        btnGoToLogin.setOnClickListener(v -> {
             startActivity(new Intent(RegisterActivity.this, LogInActivity.class));
             finish();
         });
 
-        // הוספת DatePicker ל־eTBirth
-        eTBirth.setFocusable(false);
-        eTBirth.setClickable(true);
+        // בחירת תאריך לידה
         eTBirth.setOnClickListener(v -> {
             final Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
@@ -64,7 +66,6 @@ public class RegisterActivity extends AppCompatActivity {
 
             DatePickerDialog datePickerDialog = new DatePickerDialog(RegisterActivity.this,
                     (view, selectedYear, selectedMonth, selectedDay) -> {
-                        // החודש מתחיל מ-0 לכן מוסיפים 1
                         String date = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
                         eTBirth.setText(date);
                     }, year, month, day);
@@ -97,36 +98,55 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
+        if (pass.length() < 6) {
+            tVMsg.setText("הסיסמה חייבת להכיל לפחות 6 תווים");
+            return;
+        }
+
         ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("נוצר משתמש...");
+        pd.setMessage("יוצר משתמש ושומר נתונים...");
+        pd.setCancelable(false);
         pd.show();
 
         refAuth.createUserWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(task -> {
-                    pd.dismiss();
                     if (task.isSuccessful()) {
                         FirebaseUser user = refAuth.getCurrentUser();
-                        String uid = user.getUid();
-
-                        Map<String, Object> userData = new HashMap<>();
-                        userData.put("email", email);
-                        userData.put("name", name);
-                        userData.put("birthDate", birth);
-                        userData.put("imageUri", imageUri != null ? imageUri.toString() : "");
-
-                        db.collection("users").document(uid)
-                                .set(userData)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(this, "נרשמת בהצלחה!", Toast.LENGTH_SHORT).show();
-                                    Intent si = new Intent(RegisterActivity.this, MainActivity.class);
-                                    si.putExtra("name", name);
-                                    startActivity(si);
-                                    finish();
-                                })
-                                .addOnFailureListener(e -> tVMsg.setText("שגיאה בשמירת הנתונים"));
+                        if (user != null) {
+                            saveUserToFirestore(user.getUid(), email, name, birth, pd);
+                        }
                     } else {
-                        tVMsg.setText("שגיאה ביצירת המשתמש");
+                        pd.dismiss();
+                        String error = task.getException() != null ? task.getException().getMessage() : "שגיאה לא ידועה";
+                        tVMsg.setText("שגיאה ברישום: " + error);
                     }
+                });
+    }
+
+    private void saveUserToFirestore(String uid, String email, String name, String birth, ProgressDialog pd) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("uid", uid);
+        userData.put("email", email);
+        userData.put("name", name);
+        userData.put("birthDate", birth);
+        userData.put("imageUri", imageUri != null ? imageUri.toString() : "");
+
+        db.collection("users").document(uid)
+                .set(userData)
+                .addOnSuccessListener(aVoid -> {
+                    pd.dismiss();
+                    Toast.makeText(this, "נרשמת בהצלחה!", Toast.LENGTH_SHORT).show();
+
+                    // מעבר למסך הראשי וניקוי המחסנית
+                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    pd.dismiss();
+                    Log.e("FirestoreError", "Error saving user: " + e.getMessage());
+                    tVMsg.setText("שגיאה בשמירה: " + e.getLocalizedMessage());
                 });
     }
 }
