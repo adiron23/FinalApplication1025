@@ -53,7 +53,7 @@ public class LogInActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     pd.dismiss();
                     if (task.isSuccessful()) {
-                        Intent intent = new Intent(LogInActivity.this, MainActivity.class);
+                        Intent intent = new Intent(LogInActivity.this, FamilyGatewayActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();

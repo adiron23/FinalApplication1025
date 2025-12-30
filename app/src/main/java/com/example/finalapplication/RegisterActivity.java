@@ -138,7 +138,7 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(this, "נרשמת בהצלחה!", Toast.LENGTH_SHORT).show();
 
                     // מעבר למסך הראשי וניקוי המחסנית
-                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                    Intent intent = new Intent(RegisterActivity.this, FamilyGatewayActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
