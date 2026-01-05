@@ -21,8 +21,7 @@ import java.util.Map;
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText eTEmail, eTPass, eTName, eTBirth;
-    private TextView tVMsg;
-    private TextView btnGoToLogin; // שונה ל-TextView כדי להתאים ל-XML החדש
+    private TextView tVMsg, btnGoToLogin;
     private Button createUser, btnSelectImage;
     private ImageView profileImageView;
     private FirebaseAuth refAuth;
@@ -35,7 +34,6 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // אתחול רכיבים - וודאי שה-ID תואמים ל-XML החדש ששלחתי
         eTEmail = findViewById(R.id.eTEmail);
         eTPass = findViewById(R.id.eTPass);
         eTName = findViewById(R.id.eTName);
@@ -44,7 +42,7 @@ public class RegisterActivity extends AppCompatActivity {
         createUser = findViewById(R.id.createUser);
         btnSelectImage = findViewById(R.id.btnSelectImage);
         profileImageView = findViewById(R.id.profileImageView);
-        btnGoToLogin = findViewById(R.id.btnGoToLogin); // עכשיו זה מוצא TextView
+        btnGoToLogin = findViewById(R.id.btnGoToLogin);
 
         refAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -57,7 +55,6 @@ public class RegisterActivity extends AppCompatActivity {
             finish();
         });
 
-        // בחירת תאריך לידה
         eTBirth.setOnClickListener(v -> {
             final Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
@@ -98,27 +95,18 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (pass.length() < 6) {
-            tVMsg.setText("הסיסמה חייבת להכיל לפחות 6 תווים");
-            return;
-        }
-
         ProgressDialog pd = new ProgressDialog(this);
-        pd.setMessage("יוצר משתמש ושומר נתונים...");
-        pd.setCancelable(false);
+        pd.setMessage("יוצר משתמש...");
         pd.show();
 
         refAuth.createUserWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser user = refAuth.getCurrentUser();
-                        if (user != null) {
-                            saveUserToFirestore(user.getUid(), email, name, birth, pd);
-                        }
+                        saveUserToFirestore(user.getUid(), email, name, birth, pd);
                     } else {
                         pd.dismiss();
-                        String error = task.getException() != null ? task.getException().getMessage() : "שגיאה לא ידועה";
-                        tVMsg.setText("שגיאה ברישום: " + error);
+                        tVMsg.setText("שגיאה: " + task.getException().getMessage());
                     }
                 });
     }
@@ -130,14 +118,13 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("name", name);
         userData.put("birthDate", birth);
         userData.put("imageUri", imageUri != null ? imageUri.toString() : "");
+        userData.put("familyCode", ""); // ריק בהתחלה
+        userData.put("role", "");       // ריק בהתחלה
 
-        db.collection("users").document(uid)
-                .set(userData)
+        db.collection("users").document(uid).set(userData)
                 .addOnSuccessListener(aVoid -> {
                     pd.dismiss();
-                    Toast.makeText(this, "נרשמת בהצלחה!", Toast.LENGTH_SHORT).show();
-
-                    // מעבר למסך הראשי וניקוי המחסנית
+                    // מעבר למסך בחירת/יצירת משפחה
                     Intent intent = new Intent(RegisterActivity.this, FamilyGatewayActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
@@ -145,8 +132,7 @@ public class RegisterActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     pd.dismiss();
-                    Log.e("FirestoreError", "Error saving user: " + e.getMessage());
-                    tVMsg.setText("שגיאה בשמירה: " + e.getLocalizedMessage());
+                    tVMsg.setText("שגיאה בשמירה: " + e.getMessage());
                 });
     }
 }

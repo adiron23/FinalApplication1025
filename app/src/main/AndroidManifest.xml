@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FinalApplication">
         <activity
+            android:name=".SelectRoleActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CreateFamilyActivity"
+            android:exported="false" />
+        <activity
             android:name=".FamilyGatewayActivity"
             android:exported="false" />
         <activity

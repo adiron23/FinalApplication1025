@@ -19,39 +19,51 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // אתחול רכיבים
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         tVWelcome = findViewById(R.id.tVWelcome);
 
-        // הפעלת התפריט מה-BaseActivity
         setupDrawer();
 
-        // בדיקה אם יש משתמש מחובר
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            String uid = currentUser.getUid();
-
-            // משיכת נתוני המשתמש מ-Firestore לפי ה-UID שלו
-            db.collection("users").document(uid).get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            DocumentSnapshot document = task.getResult();
-                            if (document != null && document.exists()) {
-                                // שליפת השם מהשדה "name" ששמרנו ב-RegisterActivity
-                                String name = document.getString("name");
-                                tVWelcome.setText("Welcome, " + name);
-                            } else {
-                                tVWelcome.setText("Welcome");
-                            }
-                        } else {
-                            Log.e("MainActivity", "Error getting user data", task.getException());
-                            tVWelcome.setText("Welcome");
-                        }
-                    });
-        } else {
-            // אם במקרה הגענו לכאן בלי משתמש מחובר
-            tVWelcome.setText("Welcome");
+            loadUserData(currentUser.getUid());
         }
+    }
+
+    private void loadUserData(String uid) {
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        String name = document.getString("name");
+                        String role = document.getString("role");
+                        String familyCode = document.getString("familyCode");
+
+                        if (role == null || role.isEmpty()) {
+                            tVWelcome.setText("ברוך הבא, " + name);
+                        } else {
+                            // אם יש לו תפקיד, ננסה להביא גם את שם המשפחה
+                            fetchFamilyName(familyCode, name, role);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> Log.e("MainActivity", "Error", e));
+    }
+
+    private void fetchFamilyName(String familyCode, String userName, String role) {
+        if (familyCode == null || familyCode.isEmpty()) {
+            tVWelcome.setText("שלום " + userName + "\nתפקיד: " + role);
+            return;
+        }
+
+        db.collection("families").document(familyCode).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        String familyName = doc.getString("familyName");
+                        tVWelcome.setText("משפחת " + familyName + "\nשלום " + userName + " (" + role + ")");
+                    } else {
+                        tVWelcome.setText("שלום " + userName + " (" + role + ")");
+                    }
+                });
     }
 }
