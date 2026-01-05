@@ -11,39 +11,22 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FinalApplication">
-        <activity
-            android:name=".SelectRoleActivity"
-            android:exported="false" />
-        <activity
-            android:name=".CreateFamilyActivity"
-            android:exported="false" />
-        <activity
-            android:name=".FamilyGatewayActivity"
-            android:exported="false" />
-        <activity
-            android:name=".BaseActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".RegisterActivity"
-            android:exported="false" />
         <activity
             android:name=".LogInActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".FamilyGatewayActivity" android:exported="false" />
+        <activity android:name=".CreateFamilyActivity" android:exported="false" />
+        <activity android:name=".SelectRoleActivity" android:exported="false" />
+
     </application>
 
 </manifest>

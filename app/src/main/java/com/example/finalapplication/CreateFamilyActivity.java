@@ -45,22 +45,21 @@ public class CreateFamilyActivity extends AppCompatActivity {
         findViewById(R.id.btnAddChild).setOnClickListener(v -> addChildField());
         findViewById(R.id.btnFinishCreate).setOnClickListener(v -> saveFamily());
 
-        // הוספת שדה ילד ראשון אוטומטית
         addChildField();
     }
 
     private void addChildField() {
-        TextInputLayout layout = new TextInputLayout(this, null, com.google.android.material.R.style.Widget_Material3_TextInputLayout_OutlinedBox);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 16, 0, 0);
-        layout.setLayoutParams(params);
-        layout.setHint("שם הילד");
+        // 1. "ניפוח" (Inflation) - הפיכת קובץ ה-XML לאובייקט Java חי
+        TextInputLayout childLayout = (TextInputLayout) getLayoutInflater()
+                .inflate(R.layout.item_child_field, childrenFieldsContainer, false);
 
-        TextInputEditText editText = new TextInputEditText(layout.getContext());
-        layout.addView(editText);
+        // 2. שליפת תיבת הטקסט הפנימית (ה-EditText) כדי שנוכל לקרוא את השם אחר כך
+        EditText editText = childLayout.getEditText();
 
-        childrenFieldsContainer.addView(layout);
+        // 3. הוספת השדה המעוצב לתוך ה-LinearLayout הראשי במסך
+        childrenFieldsContainer.addView(childLayout);
+
+        // 4. שמירת ה-EditText ברשימה (List) כדי שנוכל לעבור עליה בלחיצה על "סיום"
         childrenEdits.add(editText);
     }
 
@@ -74,14 +73,13 @@ public class CreateFamilyActivity extends AppCompatActivity {
             return;
         }
 
-        // בניית רשימת השמות לבחירה (availableRoles)
         List<String> roles = new ArrayList<>();
-        roles.add(p1 + " (הורה)");
-        if (!p2.isEmpty()) roles.add(p2 + " (הורה)");
+        roles.add(p1 + ":הורה");
+        if (!p2.isEmpty()) roles.add(p2 + ":הורה");
 
         for (EditText et : childrenEdits) {
             String name = et.getText().toString().trim();
-            if (!name.isEmpty()) roles.add(name + " (ילד/ה)");
+            if (!name.isEmpty()) roles.add(name + ":ילד/ה");
         }
 
         String code = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
@@ -90,27 +88,38 @@ public class CreateFamilyActivity extends AppCompatActivity {
         familyData.put("familyName", famName);
         familyData.put("familyCode", code);
         familyData.put("availableRoles", roles);
-        familyData.put("adminUid", uid);
 
         db.collection("families").document(code).set(familyData).addOnSuccessListener(aVoid -> {
-            // עדכון המשתמש הנוכחי (ההורה שיצר)
+            identifyAndSetUserRole(code, roles);
+        });
+    }
+
+    private void identifyAndSetUserRole(String code, List<String> roles) {
+        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
+            String myName = doc.getString("name");
+            String myRole = "בן משפחה";
+
+            for (String roleEntry : roles) {
+                String[] parts = roleEntry.split(":");
+                if (parts[0].equalsIgnoreCase(myName)) {
+                    myRole = parts[1];
+                    break;
+                }
+            }
+
             db.collection("users").document(uid).update(
                     "familyCode", code,
-                    "role", p1 + " (הורה)"
-            );
-
-            showCodeDialog(code);
+                    "role", myRole
+            ).addOnSuccessListener(v -> showCodeDialog(code));
         });
     }
 
     private void showCodeDialog(String code) {
         new AlertDialog.Builder(this)
                 .setTitle("המשפחה נוצרה!")
-                .setMessage("הקוד שלך הוא: " + code + "\nלחץ להעתקה ושליחה.")
+                .setMessage("הקוד שלך: " + code)
                 .setCancelable(false)
-                .setPositiveButton("העתק והמשך", (d, w) -> {
-                    ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    cb.setPrimaryClip(ClipData.newPlainText("Family Code", code));
+                .setPositiveButton("המשך", (d, w) -> {
                     startActivity(new Intent(this, MainActivity.class));
                     finish();
                 }).show();

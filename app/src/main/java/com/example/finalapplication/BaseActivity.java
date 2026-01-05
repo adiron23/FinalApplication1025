@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,20 +20,19 @@ public class BaseActivity extends AppCompatActivity {
     protected NavigationView navigationView;
     protected FirebaseAuth refAuth;
 
-    // הפונקציה הזו היא הקסם - היא מזריקה את התוכן של כל מסך לתוך השלד עם התפריט
     @Override
     public void setContentView(int layoutResID) {
-        // 1. טעינת השלד המרכזי (activity_base)
+        // 1. טעינת השלד המרכזי
         drawerLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_base, null);
         FrameLayout contentFrame = drawerLayout.findViewById(R.id.content_frame);
 
-        // 2. הזרקת התוכן של המסך הספציפי לתוך ה-FrameLayout
+        // 2. הזרקת התוכן
         getLayoutInflater().inflate(layoutResID, contentFrame, true);
 
-        // 3. הצגת השילוב הסופי על המסך
+        // 3. הצגת השילוב הסופי
         super.setContentView(drawerLayout);
 
-        // 4. הגדרת התפריט והסרגל העליון
+        // 4. הגדרת התפריט
         setupDrawer();
     }
 
@@ -41,20 +41,18 @@ public class BaseActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.nav_view);
         Toolbar toolbar = findViewById(R.id.my_toolbar);
 
-        // הגדרת ה-Toolbar כ-ActionBar של המסך
-        setSupportActionBar(toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+        }
 
-        // עדכון אילו כפתורים יופיעו בתפריט (התחבר/התנתק)
         updateMenuVisibility();
 
-        // הגדרת כפתור ה"המבורגר" (שלושת הפסים) וסנכרון שלו עם ה-Toolbar
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        // הגדרת לחיצות על פריטים בתפריט
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -68,34 +66,36 @@ public class BaseActivity extends AppCompatActivity {
                     logoutUser();
                 }
 
-                // סגירת התפריט לאחר לחיצה
-                drawerLayout.closeDrawers();
+                // סגירה בטוחה של התפריט
+                drawerLayout.closeDrawer(GravityCompat.START);
                 return true;
             }
         });
     }
 
-    // פונקציה שבודקת אם המשתמש מחובר ומציגה/מסתירה כפתורים בתפריט בהתאם
-    private void updateMenuVisibility() {
+    public void updateMenuVisibility() {
         if (navigationView != null) {
             Menu menu = navigationView.getMenu();
-            boolean isLoggedIn = (refAuth.getCurrentUser() != null);
+            boolean isLoggedIn = (FirebaseAuth.getInstance().getCurrentUser() != null);
 
-            // הצגת "התנתק" רק אם מחובר, והצגת "התחבר/הרשם" רק אם לא מחובר
-            menu.findItem(R.id.log_out).setVisible(isLoggedIn);
-            menu.findItem(R.id.log_in).setVisible(!isLoggedIn);
-            menu.findItem(R.id.sign_in).setVisible(!isLoggedIn);
+            // וודאי שה-ID האלו קיימים בדיוק כך ב-menu_drawer.xml שלך
+            if (menu.findItem(R.id.log_out) != null) menu.findItem(R.id.log_out).setVisible(isLoggedIn);
+            if (menu.findItem(R.id.log_in) != null) menu.findItem(R.id.log_in).setVisible(!isLoggedIn);
+            if (menu.findItem(R.id.sign_in) != null) menu.findItem(R.id.sign_in).setVisible(!isLoggedIn);
         }
     }
 
     protected void logoutUser() {
-        if (refAuth != null) {
-            refAuth.signOut();
-            // חזרה למסך הראשי וניקוי המחסנית
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        }
+        // התנתקות
+        FirebaseAuth.getInstance().signOut();
+
+        // יצירת Intent למסך ההתחברות (זה ימנע מהאפליקציה לנסות לטעון נתוני משתמש ב-MainActivity)
+        Intent intent = new Intent(this, LogInActivity.class);
+
+        // ניקוי כל המחסנית - המשתמש לא יכול לחזור אחורה למסך הקודם
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        startActivity(intent);
+        finish();
     }
 }

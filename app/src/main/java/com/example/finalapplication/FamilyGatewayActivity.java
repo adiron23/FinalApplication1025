@@ -7,13 +7,13 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView; // ייבוא של CardView
+import androidx.cardview.widget.CardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.List;
 
 public class FamilyGatewayActivity extends AppCompatActivity {
 
-    // שינוי סוג המשתנים מ-Button ל-CardView כדי שיתאימו ל-XML
     private CardView btnCreateFamily, btnJoinFamily;
     private FirebaseFirestore db;
     private String uid;
@@ -24,67 +24,64 @@ public class FamilyGatewayActivity extends AppCompatActivity {
         setContentView(R.layout.activity_family_gateway);
 
         db = FirebaseFirestore.getInstance();
+        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // הגנה למקרה שהמשתמש לא מחובר
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        }
-
-        // קישור הרכיבים מה-XML
         btnCreateFamily = findViewById(R.id.btnCreateFamily);
         btnJoinFamily = findViewById(R.id.btnJoinFamily);
 
-        // לחיצה על כרטיס "צור משפחה"
         btnCreateFamily.setOnClickListener(v -> {
-            Intent intent = new Intent(FamilyGatewayActivity.this, CreateFamilyActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, CreateFamilyActivity.class));
         });
 
-        // לחיצה על כרטיס "הצטרף למשפחה"
-        btnJoinFamily.setOnClickListener(v -> {
-            showJoinDialog();
-        });
+        btnJoinFamily.setOnClickListener(v -> showJoinDialog());
     }
 
     private void showJoinDialog() {
-        // יצירת תיבת טקסט בתוך דיאלוג
         final EditText input = new EditText(this);
-        input.setHint("הכנס קוד (6 תווים)");
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-
-        // הוספת ריווח פנימי לתיבת הטקסט בתוך הדיאלוג
+        input.setHint("הכנס קוד משפחתי");
         input.setPadding(50, 40, 50, 40);
 
         new AlertDialog.Builder(this)
-                .setTitle("הצטרפות למשפחה")
-                .setMessage("הזן את הקוד שקיבלת מההורה:")
+                .setTitle("הצטרפות")
                 .setView(input)
                 .setPositiveButton("אישור", (dialog, which) -> {
                     String code = input.getText().toString().toUpperCase().trim();
-                    if (!code.isEmpty()) {
-                        verifyCode(code);
-                    } else {
-                        Toast.makeText(this, "נא להזין קוד", Toast.LENGTH_SHORT).show();
-                    }
+                    if (!code.isEmpty()) verifyAndJoin(code);
                 })
                 .setNegativeButton("ביטול", null)
                 .show();
     }
 
-    private void verifyCode(String code) {
-        // חיפוש הקוד ב-Firestore
+    private void verifyAndJoin(String code) {
         db.collection("families").document(code).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
-                // הקוד נמצא! עוברים לבחירת דמות
-                Intent intent = new Intent(FamilyGatewayActivity.this, SelectRoleActivity.class);
-                intent.putExtra("FAMILY_CODE", code);
-                startActivity(intent);
-                finish(); // סוגר את המסך הנוכחי
+                List<String> roles = (List<String>) documentSnapshot.get("availableRoles");
+
+                db.collection("users").document(uid).get().addOnSuccessListener(userDoc -> {
+                    String myName = userDoc.getString("name");
+                    String myFoundRole = "בן משפחה";
+
+                    if (roles != null) {
+                        for (String entry : roles) {
+                            String[] parts = entry.split(":");
+                            if (parts[0].equalsIgnoreCase(myName)) {
+                                myFoundRole = parts[1];
+                                break;
+                            }
+                        }
+                    }
+
+                    db.collection("users").document(uid).update(
+                            "familyCode", code,
+                            "role", myFoundRole
+                    ).addOnSuccessListener(v -> {
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                    });
+                });
             } else {
-                Toast.makeText(this, "קוד לא תקין, נסה שוב", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "קוד לא נמצא", Toast.LENGTH_SHORT).show();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "שגיאה בחיבור: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
     }
 }
