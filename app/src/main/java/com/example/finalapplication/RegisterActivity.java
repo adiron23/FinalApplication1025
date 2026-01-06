@@ -6,14 +6,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +25,16 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private Uri imageUri;
     private static final int PICK_IMAGE_REQUEST = 1;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // בדיקה אם המשתמש כבר מחובר - אם כן, נשלח אותו לבדיקת סטטוס משפחה
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            checkUserStatusAndNavigate(currentUser.getUid());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,25 +56,29 @@ public class RegisterActivity extends AppCompatActivity {
 
         btnSelectImage.setOnClickListener(v -> openImageChooser());
         createUser.setOnClickListener(v -> registerUser());
-
         btnGoToLogin.setOnClickListener(v -> {
-            startActivity(new Intent(RegisterActivity.this, LogInActivity.class));
-            finish();
+            startActivity(new Intent(this, LogInActivity.class));
         });
 
         eTBirth.setOnClickListener(v -> {
             final Calendar calendar = Calendar.getInstance();
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-            DatePickerDialog datePickerDialog = new DatePickerDialog(RegisterActivity.this,
-                    (view, selectedYear, selectedMonth, selectedDay) -> {
-                        String date = selectedDay + "/" + (selectedMonth + 1) + "/" + selectedYear;
-                        eTBirth.setText(date);
-                    }, year, month, day);
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year, month, day) -> eTBirth.setText(day + "/" + (month + 1) + "/" + year),
+                    calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
             datePickerDialog.show();
         });
+    }
+
+    private void checkUserStatusAndNavigate(String uid) {
+        FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists() && doc.getString("familyCode") != null && !doc.getString("familyCode").isEmpty()) {
+                        startActivity(new Intent(this, MainActivity.class));
+                    } else {
+                        startActivity(new Intent(this, FamilyGatewayActivity.class));
+                    }
+                    finish();
+                });
     }
 
     private void openImageChooser() {
@@ -99,16 +110,14 @@ public class RegisterActivity extends AppCompatActivity {
         pd.setMessage("יוצר משתמש...");
         pd.show();
 
-        refAuth.createUserWithEmailAndPassword(email, pass)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = refAuth.getCurrentUser();
-                        saveUserToFirestore(user.getUid(), email, name, birth, pd);
-                    } else {
-                        pd.dismiss();
-                        tVMsg.setText("שגיאה: " + task.getException().getMessage());
-                    }
-                });
+        refAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                saveUserToFirestore(refAuth.getCurrentUser().getUid(), email, name, birth, pd);
+            } else {
+                pd.dismiss();
+                tVMsg.setText("שגיאה: " + task.getException().getMessage());
+            }
+        });
     }
 
     private void saveUserToFirestore(String uid, String email, String name, String birth, ProgressDialog pd) {
@@ -118,21 +127,15 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("name", name);
         userData.put("birthDate", birth);
         userData.put("imageUri", imageUri != null ? imageUri.toString() : "");
-        userData.put("familyCode", ""); // ריק בהתחלה
-        userData.put("role", "");       // ריק בהתחלה
+        userData.put("familyCode", "");
+        userData.put("role", "");
 
-        db.collection("users").document(uid).set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    pd.dismiss();
-                    // מעבר למסך בחירת/יצירת משפחה
-                    Intent intent = new Intent(RegisterActivity.this, FamilyGatewayActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    pd.dismiss();
-                    tVMsg.setText("שגיאה בשמירה: " + e.getMessage());
-                });
+        db.collection("users").document(uid).set(userData).addOnSuccessListener(aVoid -> {
+            pd.dismiss();
+            Intent intent = new Intent(this, FamilyGatewayActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
     }
 }

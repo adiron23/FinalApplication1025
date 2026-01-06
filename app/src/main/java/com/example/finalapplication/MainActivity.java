@@ -5,7 +5,7 @@ import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class MainActivity extends BaseActivity { // או BaseActivity אם יש לך
+public class MainActivity extends BaseActivity {
 
     private TextView tVWelcome;
     private FirebaseFirestore db;
@@ -14,13 +14,15 @@ public class MainActivity extends BaseActivity { // או BaseActivity אם יש 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // הזרקה לתוך השלד עם התפריט
         setContentView(R.layout.activity_main);
 
         db = FirebaseFirestore.getInstance();
-        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        tVWelcome = findViewById(R.id.tVWelcome);
-
-        loadInfo();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            tVWelcome = findViewById(R.id.tVWelcome);
+            loadInfo();
+        }
     }
 
     private void loadInfo() {
@@ -32,7 +34,7 @@ public class MainActivity extends BaseActivity { // או BaseActivity אם יש 
             if (code != null && !code.isEmpty()) {
                 db.collection("families").document(code).get().addOnSuccessListener(famDoc -> {
                     String famName = famDoc.getString("familyName");
-                    tVWelcome.setText("שלום " + name + "!\nאת/ה רשומ/ה כ" + role + "\nבמשפחת " + famName);
+                    tVWelcome.setText("משפחת " + famName + "\nשלום " + name + " (" + role + ")");
                 });
             } else {
                 tVWelcome.setText("ברוך הבא, " + name);

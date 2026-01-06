@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/log_in"
-        android:title="התחברות"
-        />
-
-    <item
-        android:id="@+id/sign_in"
-        android:title="הרשמה"
-         />
 
     <item
         android:id="@+id/log_out"
