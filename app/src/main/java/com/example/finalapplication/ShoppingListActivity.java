@@ -25,8 +25,8 @@ public class ShoppingListActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_list);
+        super.onCreate(savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
         itemList = new ArrayList<>();
@@ -36,7 +36,6 @@ public class ShoppingListActivity extends BaseActivity {
         rvShopping = findViewById(R.id.rvShopping);
         rvShopping.setLayoutManager(new LinearLayoutManager(this));
 
-        // קבלת קוד משפחה והתחלת האזנה
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
             db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
@@ -44,7 +43,7 @@ public class ShoppingListActivity extends BaseActivity {
                 if (familyCode != null && !familyCode.isEmpty()) {
                     listenToShoppingList();
                 } else {
-                    Toast.makeText(this, "לא נמצא קוד משפחה", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "יש להצטרף למשפחה תחילה", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -73,7 +72,6 @@ public class ShoppingListActivity extends BaseActivity {
 
         String id = UUID.randomUUID().toString();
         ShoppingItem item = new ShoppingItem(id, name, familyCode);
-
         db.collection("shopping_lists").document(id).set(item);
         etNewItem.setText("");
     }
