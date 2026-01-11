@@ -13,9 +13,8 @@ public class MainActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // קודם כל מפעילים את ה-setContentView של ה-Base כדי שיבנה את התפריט
+        // חשוב: קודם setContentView כדי שה-BaseActivity יבנה את השלד
         setContentView(R.layout.activity_main);
-        // רק אחרי זה קוראים ל-super
         super.onCreate(savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
@@ -24,6 +23,9 @@ public class MainActivity extends BaseActivity {
             tVWelcome = findViewById(R.id.tVWelcome);
             loadInfo();
         }
+
+        // מעדכן את התפריט למטה שהעמוד הנוכחי הוא "בית"
+        markSelectedMenuItem(R.id.nav_main);
     }
 
     private void loadInfo() {
@@ -36,9 +38,11 @@ public class MainActivity extends BaseActivity {
                 if (code != null && !code.isEmpty()) {
                     db.collection("families").document(code).get().addOnSuccessListener(famDoc -> {
                         String famName = famDoc.getString("familyName");
-                        tVWelcome.setText("משפחת " + famName + "\nשלום " + name + " (" + role + ")");
+                        if (tVWelcome != null) {
+                            tVWelcome.setText("משפחת " + famName + "\nשלום " + name + " (" + role + ")");
+                        }
                     });
-                } else {
+                } else if (tVWelcome != null) {
                     tVWelcome.setText("ברוך הבא, " + name);
                 }
             }

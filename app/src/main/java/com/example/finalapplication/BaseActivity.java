@@ -2,72 +2,57 @@ package com.example.finalapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.FrameLayout;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
+import android.widget.RelativeLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class BaseActivity extends AppCompatActivity {
 
-    protected DrawerLayout drawerLayout;
-    protected NavigationView navigationView;
     protected Toolbar toolbar;
+    protected BottomNavigationView bottomNavigationView;
 
     @Override
     public void setContentView(int layoutResID) {
-        // 1. ניפוח השלד (Base Layout)
-        drawerLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_base, null);
-        FrameLayout contentFrame = drawerLayout.findViewById(R.id.content_frame);
-
-        // 2. הזרקת התוכן של המסך הספציפי (כמו MainActivity)
+        RelativeLayout baseLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.activity_base, null);
+        FrameLayout contentFrame = baseLayout.findViewById(R.id.content_frame);
         getLayoutInflater().inflate(layoutResID, contentFrame, true);
+        super.setContentView(baseLayout);
 
-        // 3. הצגת השלד המלא על המסך
-        super.setContentView(drawerLayout);
-
-        // 4. הפעלת הגדרות התפריט
-        setupDrawer();
+        setupNavigation();
     }
 
-    private void setupDrawer() {
+    private void setupNavigation() {
         toolbar = findViewById(R.id.my_toolbar);
-        navigationView = findViewById(R.id.nav_view);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         if (toolbar != null) {
             setSupportActionBar(toolbar);
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            }
         }
 
-        // הגדרת ה-Toggle (הפסים)
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-
-        // צביעת הפסים בלבן כדי שיראו אותם היטב
-        toggle.getDrawerArrowDrawable().setColor(getResources().getColor(android.R.color.white));
-
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-
-        // האזנה ללחיצות בתפריט
-        navigationView.setNavigationItemSelectedListener(item -> {
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
-            if (id == R.id.nav_shopping_list) {
+
+            if (id == R.id.nav_main && !(this instanceof MainActivity)) {
+                startActivity(new Intent(this, MainActivity.class));
+            } else if (id == R.id.nav_shopping_list && !(this instanceof ShoppingListActivity)) {
                 startActivity(new Intent(this, ShoppingListActivity.class));
-            } else if (id == R.id.log_out) {
-                logoutUser();
+            } else if (id == R.id.nav_tasks && !(this instanceof TasksActivity)) {
+                startActivity(new Intent(this, TasksActivity.class));
+            } else if (id == R.id.nav_profile && !(this instanceof ProfileActivity)) {
+                startActivity(new Intent(this, ProfileActivity.class));
             }
-            drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
+    }
+
+    // פונקציה חדשה שכל עמוד יקרא לה כדי לסמן את האייקון הנכון
+    protected void markSelectedMenuItem(int menuItemId) {
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setSelectedItemId(menuItemId);
+        }
     }
 
     protected void logoutUser() {

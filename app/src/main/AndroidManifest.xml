@@ -12,6 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FinalApplication">
         <activity
+            android:name=".TasksActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".ItemShoppingActivity"
             android:exported="false" />
         <activity

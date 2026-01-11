@@ -25,6 +25,7 @@ public class ShoppingListActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // הגדרת ה-Layout לפני ה-super
         setContentView(R.layout.activity_shopping_list);
         super.onCreate(savedInstanceState);
 
@@ -34,7 +35,10 @@ public class ShoppingListActivity extends BaseActivity {
         etNewItem = findViewById(R.id.etNewItem);
         btnAdd = findViewById(R.id.btnAddItem);
         rvShopping = findViewById(R.id.rvShopping);
-        rvShopping.setLayoutManager(new LinearLayoutManager(this));
+
+        if (rvShopping != null) {
+            rvShopping.setLayoutManager(new LinearLayoutManager(this));
+        }
 
         String uid = FirebaseAuth.getInstance().getUid();
         if (uid != null) {
@@ -48,7 +52,12 @@ public class ShoppingListActivity extends BaseActivity {
             });
         }
 
-        btnAdd.setOnClickListener(v -> addItem());
+        if (btnAdd != null) {
+            btnAdd.setOnClickListener(v -> addItem());
+        }
+
+        // מעדכן את התפריט למטה שהעמוד הנוכחי הוא "קניות"
+        markSelectedMenuItem(R.id.nav_shopping_list);
     }
 
     private void listenToShoppingList() {
@@ -61,7 +70,9 @@ public class ShoppingListActivity extends BaseActivity {
                             itemList.add(doc.toObject(ShoppingItem.class));
                         }
                         adapter = new ShoppingAdapter(itemList, item -> deleteItem(item));
-                        rvShopping.setAdapter(adapter);
+                        if (rvShopping != null) {
+                            rvShopping.setAdapter(adapter);
+                        }
                     }
                 });
     }
