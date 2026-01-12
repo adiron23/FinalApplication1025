@@ -9,7 +9,7 @@ public class TasksActivity extends BaseActivity {
         setContentView(R.layout.activity_tasks); // ודא שיש לך activity_tasks.xml
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("משימות");
+            getSupportActionBar().setTitle("tasks");
         }
 
         // מסמן את המשימות בתפריט
