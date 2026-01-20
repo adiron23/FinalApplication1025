@@ -1,5 +1,7 @@
 package com.example.finalapplication;
 
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -10,6 +12,8 @@ public class MainActivity extends BaseActivity {
     private TextView tVWelcome;
     private FirebaseFirestore db;
     private String uid;
+
+    ConnectionReceiver connectionReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +30,12 @@ public class MainActivity extends BaseActivity {
 
         // מעדכן את התפריט למטה שהעמוד הנוכחי הוא "בית"
         markSelectedMenuItem(R.id.nav_main);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+
+        connectionReceiver = new ConnectionReceiver();
+        registerReceiver(connectionReceiver, filter, RECEIVER_EXPORTED);
     }
 
     private void loadInfo() {
@@ -47,5 +57,11 @@ public class MainActivity extends BaseActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(connectionReceiver);
+        super.onPause();
     }
 }
