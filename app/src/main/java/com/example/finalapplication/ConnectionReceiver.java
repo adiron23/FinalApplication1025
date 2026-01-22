@@ -29,12 +29,8 @@ public class ConnectionReceiver extends BroadcastReceiver {
             }
         }
 
-        if (!isWifiConn && isMobileConn) {
-            Toast.makeText(context, "אין WiFi, אבל יש Data", Toast.LENGTH_LONG).show();
-        } else if (!isWifiConn && !isMobileConn) {
-            Toast.makeText(context, "- אין חיבור בכלל", Toast.LENGTH_LONG).show();
-        } else if (isWifiConn) {
-            Toast.makeText(context, "מחובר ל-WiFi", Toast.LENGTH_SHORT).show();
+         if (!isWifiConn && !isMobileConn) {
+            Toast.makeText(context, "אין חיבור אינטרנט", Toast.LENGTH_LONG).show();
         }
     }
 }
