@@ -2,6 +2,7 @@ package com.example.finalapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,37 +19,45 @@ public class BaseActivity extends AppCompatActivity {
     public void setContentView(int layoutResID) {
         RelativeLayout baseLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.activity_base, null);
         FrameLayout contentFrame = baseLayout.findViewById(R.id.content_frame);
+
         getLayoutInflater().inflate(layoutResID, contentFrame, true);
         super.setContentView(baseLayout);
+
+        // מניעת "מעיכה" של התפריט התחתון על ידי המערכת
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setOnApplyWindowInsetsListener(null);
+        }
+
+        // הגדרת Toolbar לבן ונקי
+        toolbar = findViewById(R.id.my_toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setDisplayShowTitleEnabled(false);
+            }
+        }
 
         setupNavigation();
     }
 
     private void setupNavigation() {
-        toolbar = findViewById(R.id.my_toolbar);
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+                int id = item.getItemId();
+                if (id == R.id.nav_main && !(this instanceof MainActivity)) {
+                    startActivity(new Intent(this, MainActivity.class));
+                } else if (id == R.id.nav_tasks && !(this instanceof TasksActivity)) {
+                    startActivity(new Intent(this, TasksActivity.class));
+                } else if (id == R.id.nav_profile && !(this instanceof ProfileActivity)) {
+                    startActivity(new Intent(this, ProfileActivity.class));
+                }
+                else startActivity(new Intent(this, ShoppingListActivity.class));
+                return true;
+            });
         }
-
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.nav_main && !(this instanceof MainActivity)) {
-                startActivity(new Intent(this, MainActivity.class));
-            } else if (id == R.id.nav_shopping_list && !(this instanceof ShoppingListActivity)) {
-                startActivity(new Intent(this, ShoppingListActivity.class));
-            } else if (id == R.id.nav_tasks && !(this instanceof TasksActivity)) {
-                startActivity(new Intent(this, TasksActivity.class));
-            } else if (id == R.id.nav_profile && !(this instanceof ProfileActivity)) {
-                startActivity(new Intent(this, ProfileActivity.class));
-            }
-            return true;
-        });
     }
 
-    // פונקציה חדשה שכל עמוד יקרא לה כדי לסמן את האייקון הנכון
     protected void markSelectedMenuItem(int menuItemId) {
         if (bottomNavigationView != null) {
             bottomNavigationView.setSelectedItemId(menuItemId);

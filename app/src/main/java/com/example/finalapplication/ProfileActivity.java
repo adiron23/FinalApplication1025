@@ -1,7 +1,9 @@
 package com.example.finalapplication;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -12,7 +14,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-// אם את משתמשת ב-Glide לטעינת תמונות, הוסיפי את ה-import שלו
 
 public class ProfileActivity extends BaseActivity {
 
@@ -25,6 +26,7 @@ public class ProfileActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // טעינת ה-Layout שמתאים ל-IDs האלו
         setContentView(R.layout.activity_profile);
 
         mAuth = FirebaseAuth.getInstance();
@@ -37,6 +39,7 @@ public class ProfileActivity extends BaseActivity {
             loadUserProfile(currentUser.getUid());
         }
 
+        // סימון האייקון הנכון בתפריט התחתון
         markSelectedMenuItem(R.id.nav_profile);
     }
 
@@ -63,45 +66,45 @@ public class ProfileActivity extends BaseActivity {
                 tvUserBirthDate.setText("תאריך לידה: " + doc.getString("birthDate"));
                 tvUserRole.setText("תפקיד: " + doc.getString("role"));
 
-                String imageUri = doc.getString("imageUri");
-                if (imageUri != null && !imageUri.isEmpty()) {
-                    // כאן אפשר להשתמש ב-Glide לטעינה: Glide.with(this).load(imageUri).into(imgProfile);
-                } else {
-                    imgProfile.setImageResource(R.drawable.ic_person);
-                }
+                // ברירת מחדל לתמונה
+                imgProfile.setImageResource(R.drawable.ic_person);
 
                 String familyCode = doc.getString("familyCode");
                 if (familyCode != null) {
                     loadFamilyData(familyCode, uid);
                 }
             }
-        });
+        }).addOnFailureListener(e ->
+                Toast.makeText(this, "שגיאה בטעינת הנתונים", Toast.LENGTH_SHORT).show());
     }
 
     private void loadFamilyData(String familyCode, String currentUid) {
-        // 1. משיכת שם המשפחה מהקולקציה families
+        // משיכת שם המשפחה
         db.collection("families")
                 .whereEqualTo("familyCode", familyCode)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!querySnapshot.isEmpty()) {
                         String fName = querySnapshot.getDocuments().get(0).getString("familyName");
-                        tvFamilyNameTitle.setText("משפחת " + fName + ":");
+                        if (tvFamilyNameTitle != null) {
+                            tvFamilyNameTitle.setText("משפחת " + fName + ":");
+                        }
                     }
                 });
 
-        // 2. משיכת חברי המשפחה מהקולקציה users
+        // משיכת חברי המשפחה
         db.collection("users")
                 .whereEqualTo("familyCode", familyCode)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    familyContainer.removeAllViews();
-                    for (QueryDocumentSnapshot document : querySnapshot) {
-                        String name = document.getString("name");
-                        String role = document.getString("role");
-                        String memberId = document.getId();
-
-                        addFamilyRow(name, role, memberId, currentUid);
+                    if (familyContainer != null) {
+                        familyContainer.removeAllViews();
+                        for (QueryDocumentSnapshot document : querySnapshot) {
+                            String name = document.getString("name");
+                            String role = document.getString("role");
+                            String memberId = document.getId();
+                            addFamilyRow(name, role, memberId, currentUid);
+                        }
                     }
                 });
     }
@@ -109,18 +112,19 @@ public class ProfileActivity extends BaseActivity {
     private void addFamilyRow(String name, String role, String memberId, String currentUid) {
         TextView textView = new TextView(this);
         textView.setTextSize(16);
-        textView.setPadding(20, 20, 20, 20);
+        textView.setPadding(30, 15, 30, 15);
+        textView.setTextColor(Color.parseColor("#1A237E"));
 
         String text = name + " - " + role;
-
         if (memberId.equals(currentUid)) {
             textView.setText(text + " (אני)");
-            textView.setTextColor(Color.GRAY);
+            textView.setAlpha(0.6f); // קצת שקוף לציון "זה אני"
         } else {
             textView.setText(text);
-            textView.setTextColor(Color.BLACK);
         }
 
         familyContainer.addView(textView);
     }
+
+
 }

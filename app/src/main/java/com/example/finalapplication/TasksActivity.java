@@ -24,12 +24,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import android.widget.CheckBox;
 
 public class TasksActivity extends BaseActivity {
 
@@ -39,6 +41,7 @@ public class TasksActivity extends BaseActivity {
     private String userFamilyCode, userRole, currentUid;
     private TaskAdapter adapter;
     private List<Task> taskList;
+    private SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,11 +62,6 @@ public class TasksActivity extends BaseActivity {
         checkPermissionsAndLoadData();
 
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("מטלות הבית");
-        }
-
         markSelectedMenuItem(R.id.nav_tasks);
     }
 
@@ -73,11 +71,9 @@ public class TasksActivity extends BaseActivity {
                 userRole = doc.getString("role");
                 userFamilyCode = doc.getString("familyCode");
 
-                // הצגת כפתור הוספה רק להורה
                 if ("הורה".equals(userRole)) {
                     fabAddTask.setVisibility(View.VISIBLE);
                 }
-
                 loadTasksFromFirestore();
             }
         });
@@ -97,9 +93,31 @@ public class TasksActivity extends BaseActivity {
             if (error != null) return;
             if (value != null) {
                 taskList.clear();
+                long currentTime = System.currentTimeMillis();
+                long oneDayInMs = 24 * 60 * 60 * 1000;
+
                 for (QueryDocumentSnapshot doc : value) {
                     Task task = doc.toObject(Task.class);
-                    task.setTaskId(doc.getId()); // שומרים את ה-ID כדי שנוכל למחוק/לעדכן
+                    task.setTaskId(doc.getId());
+
+                    try {
+                        Date taskDate = dateTimeFormatter.parse(task.getDateTime());
+                        if (taskDate != null) {
+                            long taskTimeMillis = taskDate.getTime();
+
+                            // 1. מחיקה אוטומטית אם עבר יום מהיעד
+                            if (currentTime - taskTimeMillis > oneDayInMs) {
+                                db.collection("tasks").document(doc.getId()).delete();
+                                continue;
+                            }
+
+                            // 2. התראה לילד אם הגיעה השעה והוא לא סיים
+                            if (!"הורה".equals(userRole) && currentTime >= taskTimeMillis && !task.isDone()) {
+                                Toast.makeText(this, "היי! עבר הזמן לביצוע: " + task.getTaskName(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    } catch (Exception e) { e.printStackTrace(); }
+
                     taskList.add(task);
                 }
                 adapter.notifyDataSetChanged();
@@ -129,9 +147,9 @@ public class TasksActivity extends BaseActivity {
                         childNames.add(doc.getString("name"));
                         childIds.add(doc.getId());
                     }
-                    ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, childNames);
-                    spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spinnerChildren.setAdapter(spinnerAdapter);
+                    ArrayAdapter<String> sAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, childNames);
+                    sAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinnerChildren.setAdapter(sAdapter);
                 });
 
         final String[] finalDateTime = {""};
@@ -140,7 +158,7 @@ public class TasksActivity extends BaseActivity {
             new DatePickerDialog(this, (view, year, month, day) -> {
                 String date = day + "/" + (month + 1) + "/" + year;
                 new TimePickerDialog(this, (view1, hour, minute) -> {
-                    finalDateTime[0] = date + " " + String.format("%02d:%02d", hour, minute);
+                    finalDateTime[0] = date + " " + String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
                     tvSelectedDateTime.setText("זמן נבחר: " + finalDateTime[0]);
                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
@@ -168,17 +186,14 @@ public class TasksActivity extends BaseActivity {
         task.put("familyCode", userFamilyCode);
         task.put("isDone", false);
 
-        db.collection("tasks").add(task).addOnSuccessListener(ref -> {
-            Toast.makeText(this, "משימה הוקצתה ל" + cName, Toast.LENGTH_SHORT).show();
-        });
+        db.collection("tasks").add(task);
     }
 
     private void deleteTask(String taskId) {
-        db.collection("tasks").document(taskId).delete();
+        db.collection("tasks").document(taskId).delete().addOnSuccessListener(aVoid ->
+                Toast.makeText(this, "כל הכבוד! המשימה הושלמה.", Toast.LENGTH_SHORT).show());
     }
 
-    // --- Adapter ---
-// --- Adapter המעודכן עם חסימת מחיקה למי שלא בעל המשימה ---
     private class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         private List<Task> list;
         public TaskAdapter(List<Task> list) { this.list = list; }
@@ -194,45 +209,21 @@ public class TasksActivity extends BaseActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Task task = list.get(position);
             holder.tvTitle.setText(task.getTaskName());
-            holder.tvAssignee.setText("למי: " + task.getAssignedToName());
+            holder.tvAssignee.setText("מיועד ל: " + task.getAssignedToName());
             holder.tvTime.setText(task.getDateTime());
 
-            // --- לוגיקה לפי תפקיד משתמש ---
-
-            if ("הורה".equals(userRole)) {
-                // תצוגת הורה: מסתירים את הצ'קבוקס לחלוטין
-                holder.cbDone.setVisibility(View.GONE);
-
-                // לחיצה ארוכה להורה = מחיקת משימה (כי נעשתה טעות או ביטול)
-                holder.itemView.setOnLongClickListener(v -> {
-                    new AlertDialog.Builder(TasksActivity.this)
-                            .setTitle("מחיקת משימה")
-                            .setMessage("האם למחוק את המשימה הזו מהרשימה?")
-                            .setPositiveButton("מחק", (dialog, which) -> deleteTask(task.getTaskId()))
-                            .setNegativeButton("ביטול", null)
-                            .show();
-                    return true;
-                });
-
-            } else {
-                // תצוגת ילד: מראים צ'קבוקס
-                holder.cbDone.setVisibility(View.VISIBLE);
-                holder.cbDone.setOnCheckedChangeListener(null);
-                holder.cbDone.setChecked(false);
-
-                // לחיצה על הצ'קבוקס לילד = אישור ביצוע
-                holder.cbDone.setOnClickListener(v -> {
+            holder.itemView.setOnLongClickListener(v -> {
+                if (task.getAssignedToUid() != null && task.getAssignedToUid().equals(currentUid)) {
                     new AlertDialog.Builder(TasksActivity.this)
                             .setTitle("סיום משימה")
                             .setMessage("ביצעת את המשימה?")
                             .setPositiveButton("כן, סיימתי!", (dialog, which) -> deleteTask(task.getTaskId()))
-                            .setNegativeButton("ביטול", (dialog, which) -> holder.cbDone.setChecked(false))
-                            .show();
-                });
-
-                // הילד לא יכול למחוק בלחיצה ארוכה, רק לסמן V
-                holder.itemView.setOnLongClickListener(null);
-            }
+                            .setNegativeButton("עוד לא", null).show();
+                } else {
+                    Toast.makeText(TasksActivity.this, "רק " + task.getAssignedToName() + " יכול/ה לאשר זאת", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            });
         }
 
         @Override
@@ -240,14 +231,11 @@ public class TasksActivity extends BaseActivity {
 
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvTitle, tvAssignee, tvTime;
-            CheckBox cbDone;
-
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvTitle = itemView.findViewById(R.id.tvTaskTitle);
                 tvAssignee = itemView.findViewById(R.id.tvTaskAssignee);
                 tvTime = itemView.findViewById(R.id.tvTaskTime);
-                cbDone = itemView.findViewById(R.id.cbTaskDone);
             }
         }
     }
