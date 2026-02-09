@@ -14,12 +14,10 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
     private List<ShoppingItem> items;
     private OnItemCheckedListener listener;
 
-    // הגדרת ממשק (Interface) כדי שה-Activity יוכל להגיב ללחיצה
     public interface OnItemCheckedListener {
         void onItemChecked(ShoppingItem item);
     }
 
-    // בנאי (Constructor)
     public ShoppingAdapter(List<ShoppingItem> items, OnItemCheckedListener listener) {
         this.items = items;
         this.listener = listener;
@@ -28,7 +26,6 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // קישור לקובץ ה-XML של השורה הבודדת
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_shopping, parent, false);
         return new ViewHolder(view);
     }
@@ -37,13 +34,16 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ShoppingItem item = items.get(position);
 
-        // הצגת שם המוצר
         holder.tvName.setText(item.getName());
 
-        // איפוס הצ'קבוקס (שלא יישאר מסומן מפריטים קודמים בזיכרון)
+        // ביטול המאזין לפני שינוי המצב כדי למנוע קריאות מיותרות בזמן מיחזור השורה
+        holder.checkBox.setOnCheckedChangeListener(null);
+
+        // כאן הנחתי שיש לך שדה isChecked ב-ShoppingItem.
+        // אם אין לך, מומלץ להוסיף כדי שהרשימה תדע מה מצב הפריט.
         holder.checkBox.setChecked(false);
 
-        // הגדרת פעולה בעת לחיצה על הצ'קבוקס
+        // שימוש ב-OnClickListener עדיף כאן כדי לזהות לחיצה אמיתית של משתמש
         holder.checkBox.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemChecked(item);
@@ -53,18 +53,17 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return items != null ? items.size() : 0;
     }
 
-    // מחלקה פנימית שמחזיקה את הרכיבים של כל שורה
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
         CheckBox checkBox;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvItemName); // חייב להיות קיים ב-item_shopping.xml
-            checkBox = itemView.findViewById(R.id.checkItem); // חייב להיות קיים ב-item_shopping.xml
+            tvName = itemView.findViewById(R.id.tvItemName);
+            checkBox = itemView.findViewById(R.id.checkItem);
         }
     }
 }

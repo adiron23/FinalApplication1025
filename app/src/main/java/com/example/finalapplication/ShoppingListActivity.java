@@ -25,66 +25,90 @@ public class ShoppingListActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // הגדרת ה-Layout לפני ה-super
+        // 1. קריאה ל-setContentView של BaseActivity (שמנפח את ה-Layout)
         setContentView(R.layout.activity_shopping_list);
         super.onCreate(savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
+
+        // 2. אתחול הרשימה והאדפטר כבר עכשיו (לפני הגעת הנתונים)
         itemList = new ArrayList<>();
+        adapter = new ShoppingAdapter(itemList, item -> deleteItem(item));
 
         etNewItem = findViewById(R.id.etNewItem);
         btnAdd = findViewById(R.id.btnAddItem);
         rvShopping = findViewById(R.id.rvShopping);
 
+        // 3. חיבור האדפטר מיד כדי למנוע את שגיאת ה-"No adapter attached"
         if (rvShopping != null) {
             rvShopping.setLayoutManager(new LinearLayoutManager(this));
+            rvShopping.setAdapter(adapter);
         }
 
-        String uid = FirebaseAuth.getInstance().getUid();
-        if (uid != null) {
-            db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
-                familyCode = doc.getString("familyCode");
-                if (familyCode != null && !familyCode.isEmpty()) {
-                    listenToShoppingList();
-                } else {
-                    Toast.makeText(this, "יש להצטרף למשפחה תחילה", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+        // 4. טעינת הנתונים
+        loadUserDataAndListen();
 
         if (btnAdd != null) {
             btnAdd.setOnClickListener(v -> addItem());
         }
 
-        // מעדכן את התפריט למטה שהעמוד הנוכחי הוא "קניות"
         markSelectedMenuItem(R.id.nav_shopping_list);
+    }
+
+    private void loadUserDataAndListen() {
+        String uid = FirebaseAuth.getInstance().getUid();
+        if (uid != null) {
+            db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    familyCode = doc.getString("familyCode");
+                    if (familyCode != null && !familyCode.isEmpty()) {
+                        listenToShoppingList();
+                    } else {
+                        Toast.makeText(this, "יש להצטרף למשפחה תחילה", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }).addOnFailureListener(e -> {
+                Toast.makeText(this, "שגיאה בטעינת נתוני משתמש", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
     private void listenToShoppingList() {
         db.collection("shopping_lists")
                 .whereEqualTo("familyCode", familyCode)
                 .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        return; // טיפול בשגיאות חיבור
+                    }
                     if (value != null) {
                         itemList.clear();
                         for (DocumentSnapshot doc : value.getDocuments()) {
-                            itemList.add(doc.toObject(ShoppingItem.class));
+                            ShoppingItem item = doc.toObject(ShoppingItem.class);
+                            if (item != null) {
+                                itemList.add(item);
+                            }
                         }
-                        adapter = new ShoppingAdapter(itemList, item -> deleteItem(item));
-                        if (rvShopping != null) {
-                            rvShopping.setAdapter(adapter);
-                        }
+                        // 5. במקום ליצור אדפטר חדש, אנחנו רק מעדכנים את הקיים
+                        adapter.notifyDataSetChanged();
                     }
                 });
     }
 
     private void addItem() {
         String name = etNewItem.getText().toString().trim();
-        if (name.isEmpty() || familyCode == null) return;
+        if (name.isEmpty()) {
+            Toast.makeText(this, "נא להזין שם מוצר", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (familyCode == null) return;
 
         String id = UUID.randomUUID().toString();
         ShoppingItem item = new ShoppingItem(id, name, familyCode);
-        db.collection("shopping_lists").document(id).set(item);
-        etNewItem.setText("");
+
+        // הוספה ל-Firestore
+        db.collection("shopping_lists").document(id).set(item)
+                .addOnSuccessListener(aVoid -> etNewItem.setText(""))
+                .addOnFailureListener(e -> Toast.makeText(this, "שגיאה בהוספה", Toast.LENGTH_SHORT).show());
     }
 
     private void deleteItem(ShoppingItem item) {
