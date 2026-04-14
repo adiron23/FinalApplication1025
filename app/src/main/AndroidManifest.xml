@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -14,8 +18,18 @@
         <receiver
             android:name=".ConnectionReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
 
+        <receiver
+            android:name=".TaskAlarmReceiver"
+            android:exported="false" />
+
+        <activity
+            android:name=".JournalActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CalendarActivity"
+            android:exported="false" />
         <activity
             android:name=".TasksActivity"
             android:exported="false" />
@@ -45,7 +59,14 @@
             android:exported="false" />
         <activity
             android:name=".FamilyGatewayActivity"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="familyapp" android:host="join" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".CreateFamilyActivity"
             android:exported="false" />

@@ -35,6 +35,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_create_family);
 
         db = FirebaseFirestore.getInstance();
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         childrenFieldsContainer = findViewById(R.id.childrenFieldsContainer);
@@ -60,7 +61,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
         childrenFieldsContainer.addView(childLayout);
 
         // 4. שמירת ה-EditText ברשימה (List) כדי שנוכל לעבור עליה בלחיצה על "סיום"
-        childrenEdits.add(editText);
+        if (editText != null) childrenEdits.add(editText);
     }
 
     private void saveFamily() {
@@ -89,9 +90,9 @@ public class CreateFamilyActivity extends AppCompatActivity {
         familyData.put("familyCode", code);
         familyData.put("availableRoles", roles);
 
-        db.collection("families").document(code).set(familyData).addOnSuccessListener(aVoid -> {
-            identifyAndSetUserRole(code, roles);
-        });
+        db.collection("families").document(code).set(familyData)
+                .addOnSuccessListener(aVoid -> identifyAndSetUserRole(code, roles))
+                .addOnFailureListener(e -> Toast.makeText(this, "שגיאה ביצירת משפחה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void identifyAndSetUserRole(String code, List<String> roles) {
@@ -99,27 +100,49 @@ public class CreateFamilyActivity extends AppCompatActivity {
             String myName = doc.getString("name");
             String myRole = "בן משפחה";
 
-            for (String roleEntry : roles) {
-                String[] parts = roleEntry.split(":");
-                if (parts[0].equalsIgnoreCase(myName)) {
-                    myRole = parts[1];
-                    break;
+            if (myName != null) {
+                for (String roleEntry : roles) {
+                    String[] parts = roleEntry.split(":");
+                    if (parts.length >= 2 && parts[0].equalsIgnoreCase(myName)) {
+                        myRole = parts[1];
+                        break;
+                    }
                 }
             }
 
             db.collection("users").document(uid).update(
                     "familyCode", code,
                     "role", myRole
-            ).addOnSuccessListener(v -> showCodeDialog(code));
+            ).addOnSuccessListener(v -> showShareDialog(code))
+             .addOnFailureListener(e -> Toast.makeText(this, "שגיאה בשמירת תפקיד: " + e.getMessage(), Toast.LENGTH_SHORT).show());
         });
     }
 
-    private void showCodeDialog(String code) {
+    private void showShareDialog(String code) {
+        String link = "familyapp://join?code=" + code;
+
         new AlertDialog.Builder(this)
                 .setTitle("המשפחה נוצרה!")
-                .setMessage("הקוד שלך: " + code)
+                .setMessage("שתף את הקישור הבא עם בני המשפחה כדי שיצטרפו:\n\n" + link + "\n\nקוד ידני: " + code)
                 .setCancelable(false)
-                .setPositiveButton("המשך", (d, w) -> {
+                .setPositiveButton("שתף קישור", (d, w) -> {
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/plain");
+                    shareIntent.putExtra(Intent.EXTRA_TEXT,
+                            "הצטרף למשפחה שלנו באפליקציה! לחץ על הקישור: " + link);
+                    startActivity(Intent.createChooser(shareIntent, "שתף קישור הצטרפות"));
+                    // continue to MainActivity after sharing
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                })
+                .setNeutralButton("העתק קישור", (d, w) -> {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    clipboard.setPrimaryClip(ClipData.newPlainText("family_link", link));
+                    Toast.makeText(this, "הקישור הועתק", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                })
+                .setNegativeButton("המשך בלי לשתף", (d, w) -> {
                     startActivity(new Intent(this, MainActivity.class));
                     finish();
                 }).show();

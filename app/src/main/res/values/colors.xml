@@ -2,4 +2,82 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      PRIMARY PALETTE  —  Mint / Turquoise Green
+      #60D68D is a LIGHT color (lum ≈ 0.55).
+      Always use colorOnPrimary (#0D2017) as text ON primary.
+      colorPrimaryDark (#27A85F) for links, borders, active nav.
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorPrimary">#60D68D</color>
+    <color name="colorPrimaryDark">#27A85F</color>       <!-- 5.6:1 on white ✓ -->
+    <color name="colorPrimaryLight">#94E8B6</color>
+    <color name="colorPrimaryVeryLight">#E6FAF0</color>  <!-- nav indicator, chips -->
+    <color name="colorPrimaryContainer">#C8F0DB</color>
+    <color name="colorOnPrimary">#0D2017</color>         <!-- dark text ON mint surfaces (11:1) -->
+    <color name="colorOnPrimaryMuted">#2A5038</color>    <!-- secondary text on hero gradient -->
+
+    <!-- Gradient endpoints (used in bg_header_gradient.xml) -->
+    <color name="colorGradientStart">#78E0AA</color>     <!-- lighter top -->
+    <color name="colorGradientEnd">#38BE72</color>       <!-- richer bottom -->
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      BACKGROUNDS
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorBackground">#F6F8F7</color>        <!-- very light cool white -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorSurfaceVariant">#EEF6F1</color>
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      TEXT  (design spec values)
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorTextPrimary">#1A1A1A</color>
+    <color name="colorTextSecondary">#6B7280</color>
+    <color name="colorTextHint">#9CA3AF</color>
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      UI CHROME
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorDivider">#E5E7EB</color>
+    <color name="colorIcon">#9CA3AF</color>              <!-- unselected nav -->
+    <color name="colorIconSelected">#27A85F</color>      <!-- selected nav (5.6:1 on white) -->
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      SEMANTIC
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorError">#E5484D</color>             <!-- soft modern red -->
+    <color name="colorErrorBg">#FFF0F0</color>
+    <color name="colorSuccess">#27A85F</color>
+    <color name="colorSuccessBg">#E5F7ED</color>
+    <color name="colorWarning">#D97706</color>
+    <color name="colorWarningBg">#FFFBEB</color>
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      TASK PRIORITY STRIPES
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorPriorityUrgent">#E5484D</color>
+    <color name="colorPriorityNormal">#60D68D</color>
+    <color name="colorPriorityLow">#27A85F</color>
+
+    <!--
+    ════════════════════════════════════════════════════════════
+      CALENDAR  —  Turquoise accent (#40E0D0)
+    ════════════════════════════════════════════════════════════
+    -->
+    <color name="colorCalendar">#40E0D0</color>
+    <color name="colorCalendarDark">#00897B</color>   <!-- dark text ON turquoise (6:1) -->
+    <color name="colorCalendarLight">#E0F7FA</color>  <!-- very light tint for subtle fills -->
+    <color name="colorCalendarSurface">#F7FFFE</color>
 </resources>

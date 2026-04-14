@@ -7,7 +7,8 @@ public class Task {
     private String assignedToUid;
     private String dateTime;
     private String familyCode;
-    private boolean isDone; // השדה שגרם לשגיאה
+    private boolean isDone;
+    private String priority; // "דחוף", "רגיל", "נמוך"
 
     // קונסטרקטור ריק חובה עבור פיירבייס
     public Task() {}
@@ -36,4 +37,7 @@ public class Task {
     // זו הפונקציה שחסרה לך!
     public boolean isDone() { return isDone; }
     public void setDone(boolean done) { isDone = done; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 }

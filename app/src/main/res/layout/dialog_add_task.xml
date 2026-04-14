@@ -12,60 +12,68 @@
         android:layoutDirection="rtl">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="הוספת מטלה"
-            android:textSize="28sp"
+            android:text="משימה חדשה"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#1A237E"
-            android:layout_gravity="center"
-            android:layout_marginBottom="20dp"/>
+            android:textColor="@color/colorTextPrimary"
+            android:gravity="center"
+            android:layout_marginBottom="20dp" />
 
+        <!-- Task name -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="מה המשימה?"
-            android:layout_marginBottom="12dp">
+            android:hint="שם המשימה"
+            android:layout_marginBottom="16dp">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTaskName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"/>
+                android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Assignee spinner -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="שיוך לילד/ה:"
-            android:textColor="#1A237E"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
+            android:text="שיוך לילד/ה"
+            android:textSize="13sp"
+            android:textColor="@color/colorTextSecondary"
+            android:layout_marginBottom="6dp" />
 
         <Spinner
             android:id="@+id/spinnerChildren"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="52dp"
             android:background="@android:drawable/btn_dropdown"
             android:layout_marginBottom="16dp" />
 
+        <!-- Date/time picker -->
         <Button
             android:id="@+id/btnSetDate"
-            style="@style/Widget.Material3.Button.TonalButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="בחר תאריך ושעה"
-            android:textColor="#1A237E"
-            android:layout_marginBottom="8dp"/>
+            android:textColor="@color/colorPrimary"
+            android:textAllCaps="false"
+            app:strokeColor="@color/colorPrimary"
+            app:cornerRadius="26dp"
+            android:layout_marginBottom="8dp" />
 
         <TextView
             android:id="@+id/tvSelectedDateTime"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="טרם נבחר זמן"
-            android:layout_gravity="center"
-            android:textColor="#666666"
-            android:layout_marginBottom="12dp"/>
+            android:text="טרם נבחר תאריך"
+            android:gravity="center"
+            android:textColor="@color/colorTextSecondary"
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
 
     </LinearLayout>
 </ScrollView>

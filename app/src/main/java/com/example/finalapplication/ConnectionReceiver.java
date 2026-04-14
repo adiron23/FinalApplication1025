@@ -21,6 +21,7 @@ public class ConnectionReceiver extends BroadcastReceiver {
         if (cm != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 android.net.Network network = cm.getActiveNetwork();
+                if (network == null) { Toast.makeText(context, "אין חיבור אינטרנט", Toast.LENGTH_LONG).show(); return; }
                 NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
                 if (capabilities != null) {
                     isWifiConn = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);

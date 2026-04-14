@@ -2,72 +2,95 @@ package com.example.finalapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class BaseActivity extends AppCompatActivity {
 
-    protected Toolbar toolbar;
     protected BottomNavigationView bottomNavigationView;
 
     @Override
-    public void setContentView(int layoutResID) {
-        RelativeLayout baseLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.activity_base, null);
-        FrameLayout contentFrame = baseLayout.findViewById(R.id.content_frame);
-
-        getLayoutInflater().inflate(layoutResID, contentFrame, true);
-        super.setContentView(baseLayout);
-
-        // מניעת "מעיכה" של התפריט התחתון על ידי המערכת
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        if (bottomNavigationView != null) {
-            bottomNavigationView.setOnApplyWindowInsetsListener(null);
-        }
-
-        // הגדרת Toolbar לבן ונקי
-        toolbar = findViewById(R.id.my_toolbar);
-        if (toolbar != null) {
-            setSupportActionBar(toolbar);
-            if (getSupportActionBar() != null) {
-                getSupportActionBar().setDisplayShowTitleEnabled(false);
-            }
-        }
-
-        setupNavigation();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
     }
 
-    private void setupNavigation() {
+    // הוספת onResume כדי לעדכן את התפריט בכל פעם שהמסך חוזר לקדמת הבמה
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateBottomMenuSelection();
+    }
+
+    protected void setContentViewAndBind(int layoutResID) {
+        super.setContentView(R.layout.activity_base);
+
+        FrameLayout contentFrame = findViewById(R.id.content_frame);
+        LayoutInflater.from(this).inflate(layoutResID, contentFrame, true);
+
+        setupBottomNavigation();
+    }
+
+    private void setupBottomNavigation() {
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
         if (bottomNavigationView != null) {
-            bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            // ביטול אנימציית ה"קפיצה" של האייקונים (Shift Mode)
+            bottomNavigationView.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
+
+            bottomNavigationView.setOnItemSelectedListener(item -> {
                 int id = item.getItemId();
+                Intent intent = null;
+
                 if (id == R.id.nav_main && !(this instanceof MainActivity)) {
-                    startActivity(new Intent(this, MainActivity.class));
+                    intent = new Intent(this, MainActivity.class);
+                } else if (id == R.id.nav_shopping_list && !(this instanceof ShoppingListActivity)) {
+                    intent = new Intent(this, ShoppingListActivity.class);
                 } else if (id == R.id.nav_tasks && !(this instanceof TasksActivity)) {
-                    startActivity(new Intent(this, TasksActivity.class));
+                    intent = new Intent(this, TasksActivity.class);
+                } else if (id == R.id.nav_calendar && !(this instanceof CalendarActivity)) {
+                    intent = new Intent(this, CalendarActivity.class);
                 } else if (id == R.id.nav_profile && !(this instanceof ProfileActivity)) {
-                    startActivity(new Intent(this, ProfileActivity.class));
+                    intent = new Intent(this, ProfileActivity.class);
                 }
-                else startActivity(new Intent(this, ShoppingListActivity.class));
+
+                if (intent != null) {
+                    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    startActivity(intent);
+                    overridePendingTransition(0, 0);
+                    return true;
+                }
                 return true;
             });
         }
     }
 
-    protected void markSelectedMenuItem(int menuItemId) {
+    private void updateBottomMenuSelection() {
+        if (bottomNavigationView == null) {
+            bottomNavigationView = findViewById(R.id.bottom_navigation);
+        }
+
         if (bottomNavigationView != null) {
-            bottomNavigationView.setSelectedItemId(menuItemId);
+            int id = -1;
+            if (this instanceof MainActivity) id = R.id.nav_main;
+            else if (this instanceof ShoppingListActivity) id = R.id.nav_shopping_list;
+            else if (this instanceof TasksActivity) id = R.id.nav_tasks;
+            else if (this instanceof CalendarActivity) id = R.id.nav_calendar;
+            else if (this instanceof ProfileActivity)  id = R.id.nav_profile;
+
+            if (id != -1) {
+                // שימוש ב-setSelectedItemId במקום ב-setChecked(true)
+                // זה מעדכן את המצב הוויזואלי של התפריט בצורה אמינה יותר
+                bottomNavigationView.getMenu().findItem(id).setChecked(true);
+            }
         }
     }
 
     protected void logoutUser() {
         FirebaseAuth.getInstance().signOut();
         Intent intent = new Intent(this, LogInActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }

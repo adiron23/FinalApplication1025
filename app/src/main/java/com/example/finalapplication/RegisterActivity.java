@@ -111,11 +111,12 @@ public class RegisterActivity extends AppCompatActivity {
         pd.show();
 
         refAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                saveUserToFirestore(refAuth.getCurrentUser().getUid(), email, name, birth, pd);
+            if (task.isSuccessful() && task.getResult() != null && task.getResult().getUser() != null) {
+                saveUserToFirestore(task.getResult().getUser().getUid(), email, name, birth, pd);
             } else {
                 pd.dismiss();
-                tVMsg.setText("שגיאה: " + task.getException().getMessage());
+                Exception e = task.getException();
+                tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
             }
         });
     }
@@ -136,6 +137,9 @@ public class RegisterActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
+        }).addOnFailureListener(e -> {
+            pd.dismiss();
+            tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage());
         });
     }
 }

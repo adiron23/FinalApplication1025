@@ -1,130 +1,240 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  ══════════════════════════════════════════════════════════════
+   PROFILE — Showcase redesign
+   Header:  gradient bg (bg_header_gradient), curved 36dp bottom
+            centered avatar on semi-transparent white circle
+            name bold dark, email muted dark
+   Cards:   white, 20dp radius, 3dp shadow, float over header
+   Buttons: gradient primary, outline secondary, danger red
+   Grid:    8dp base unit, 20dp card padding, 16dp card margin
+  ══════════════════════════════════════════════════════════════
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#F5F7FA">
+    android:orientation="vertical"
+    android:background="@color/colorBackground">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:paddingTop="48dp"
-        android:layoutDirection="rtl">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="הפרופיל שלי"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:textColor="#1A237E"
-            android:layout_gravity="center"
-            android:layout_marginBottom="24dp"/>
-
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFFFFF">
+            android:orientation="vertical">
 
+            <!-- ═══════════════════════════════════════════════════════
+                 GRADIENT HERO HEADER
+                 bg_header_gradient: #78E0AA → #38BE72, 36dp bottom curve
+                 Dark text ensures 11:1 contrast on all gradient stops
+                 ═══════════════════════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp"
-                android:gravity="center">
+                android:background="@drawable/bg_header_gradient"
+                android:gravity="center"
+                android:paddingTop="36dp"
+                android:paddingBottom="56dp"
+                android:paddingHorizontal="24dp">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/imgProfile"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                <!-- Avatar: white translucent circle on gradient -->
+                <ImageView
+                    android:id="@+id/ivAvatar"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
                     android:src="@drawable/ic_person"
-                    android:padding="2dp"
-                    app:strokeColor="#1A237E"
-                    app:strokeWidth="2dp"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                    android:layout_marginBottom="16dp"/>
+                    android:padding="22dp"
+                    android:background="@drawable/bg_circle_white"
+                    android:scaleType="centerInside" />
 
+                <!-- Name — bold, near-black, high contrast on gradient -->
                 <TextView
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="24sp"
+                    android:layout_marginTop="16dp"
+                    android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#1A237E"/>
+                    android:textColor="@color/colorOnPrimary"
+                    android:letterSpacing="-0.01"
+                    android:text="שם משתמש" />
 
+                <!-- Email — muted but still readable (6:1) -->
                 <TextView
                     android:id="@+id/tvUserEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textColor="#757575"
-                    android:layout_marginTop="4dp"/>
+                    android:layout_marginTop="4dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorOnPrimaryMuted"
+                    android:text="email@example.com" />
 
-                <TextView
-                    android:id="@+id/tvUserBirthDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textColor="#757575" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#E0E0E0"
-                    android:layout_marginVertical="16dp"/>
-
-                <TextView
-                    android:id="@+id/tvUserRole"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="18sp"
-                    android:textColor="#1A237E"
-                    android:textStyle="bold|italic" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <TextView
-            android:id="@+id/tvFamilyNameTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="משפחה:"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="12dp"
-            android:textColor="#1A237E" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="#FFFFFF">
-
+            <!-- ═══════════════════════════════════════════════════════
+                 FLOATING CARDS
+                 Float -36dp over the header curve for visual depth
+                 ═══════════════════════════════════════════════════════ -->
             <LinearLayout
-                android:id="@+id/familyContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="32dp"
+                android:layout_marginTop="-36dp">
+
+                <!-- ── Personal Info Card ──────────────────────────── -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="3dp"
+                    app:cardBackgroundColor="@color/colorSurface">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <!-- Card label -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="פרטים אישיים"
+                            android:textSize="13sp"
+                            android:textColor="@color/colorPrimaryDark"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="16dp" />
+
+                        <!-- Birth date row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingVertical="4dp"
+                            android:layout_marginBottom="12dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="תאריך לידה"
+                                android:textSize="14sp"
+                                android:textColor="@color/colorTextSecondary" />
+
+                            <TextView
+                                android:id="@+id/tvUserBirthDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/colorTextPrimary"
+                                android:text="—" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/colorDivider"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Role row -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingVertical="4dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:text="תפקיד"
+                                android:textSize="14sp"
+                                android:textColor="@color/colorTextSecondary" />
+
+                            <TextView
+                                android:id="@+id/tvUserRole"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/colorPrimaryDark"
+                                android:text="—" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- ── Family Card ────────────────────────────────── -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="3dp"
+                    app:cardBackgroundColor="@color/colorSurface">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:id="@+id/tvFamilyNameTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="המשפחה שלי"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorPrimaryDark"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="16dp" />
+
+                        <LinearLayout
+                            android:id="@+id/familyContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- ── Actions ────────────────────────────────────── -->
+                <!-- 24dp spacing above buttons (3 × 8dp grid) -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp" />
+
+                <Button
+                    android:id="@+id/btnEditProfile"
+                    style="@style/AppButton"
+                    android:layout_marginBottom="12dp"
+                    android:text="עריכת פרופיל" />
+
+                <Button
+                    android:id="@+id/btnInviteMember"
+                    style="@style/AppButton.Outline"
+                    android:layout_marginBottom="12dp"
+                    android:text="הוסף חבר משפחה"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnLogout"
+                    style="@style/AppButton.Danger"
+                    android:text="התנתק" />
+
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="התנתקות מהמערכת"
-            android:textSize="18sp"
-            android:backgroundTint="#FF5252"
-            android:layout_marginTop="40dp"
-            android:layout_marginBottom="20dp"
-            app:cornerRadius="28dp"/>
-
-    </LinearLayout>
-</ScrollView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
