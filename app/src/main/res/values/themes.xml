@@ -2,34 +2,43 @@
 
     <!--
     ════════════════════════════════════════════════════════════
-      BASE THEME  —  Material 3 · Mint Green · Modern 2025
+      BASE THEME  —  Material 3 · Warm Brown · Modern 2025
     ════════════════════════════════════════════════════════════
     -->
     <style name="Base.Theme.FinalApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary — warm brown -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorOnPrimary">@color/colorOnPrimary</item>
         <item name="colorPrimaryContainer">@color/colorPrimaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/colorOnPrimary</item>
+        <item name="colorOnPrimaryContainer">@color/colorPrimaryDark</item>
+        <!-- Secondary — same brown family (prevents M3 default blue leaking in) -->
+        <item name="colorSecondary">@color/colorPrimaryLight</item>
+        <item name="colorOnSecondary">@color/colorOnPrimary</item>
+        <item name="colorSecondaryContainer">@color/colorPrimaryVeryLight</item>
+        <item name="colorOnSecondaryContainer">@color/colorPrimaryDark</item>
+        <!-- Tertiary — muted warm tone (prevents M3 default teal leaking in) -->
+        <item name="colorTertiary">@color/colorPrimaryLight</item>
+        <item name="colorOnTertiary">@color/colorOnPrimary</item>
+        <item name="colorTertiaryContainer">@color/colorPrimaryVeryLight</item>
+        <item name="colorOnTertiaryContainer">@color/colorPrimaryDark</item>
+        <!-- Surfaces -->
         <item name="colorSurface">@color/colorSurface</item>
         <item name="colorSurfaceVariant">@color/colorSurfaceVariant</item>
+        <item name="colorOnSurface">@color/colorTextPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/colorTextSecondary</item>
         <item name="colorError">@color/colorError</item>
         <!-- System bars -->
         <item name="android:windowBackground">@color/colorBackground</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
         <item name="android:navigationBarColor">@color/colorSurface</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowAnimationStyle">@null</item>
         <!-- RTL layout (Hebrew) -->
         <item name="android:layoutDirection">rtl</item>
-        <!--
-          FONT: sans-serif (Roboto) — stable default.
-          To switch to Rubik:
-            1. Android Studio → res/font → New → Font Resource → search "Rubik"
-            2. Replace the two lines below with @font/rubik
-        -->
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="fontFamily">sans-serif</item>
+        <!-- FONT: Heebo — Hebrew-optimised variable font, bundled in res/font/ -->
+        <item name="android:fontFamily">@font/heebo</item>
+        <item name="fontFamily">@font/heebo</item>
     </style>
 
     <style name="Theme.FinalApplication" parent="Base.Theme.FinalApplication" />
@@ -37,46 +46,46 @@
     <!--
     ════════════════════════════════════════════════════════════
       TYPOGRAPHY SCALE  (8dp baseline grid)
-      Title      22sp · Bold    · #1A1A1A
-      Section    16sp · Bold    · #1A1A1A
-      Body       15sp · Regular · #1A1A1A
-      Caption    13sp · Regular · #6B7280
-      Label      12sp · Medium  · #6B7280
+      Title      22sp · Bold    · colorTextPrimary
+      Section    18sp · Bold    · colorTextPrimary
+      Body       17sp · Regular · colorTextPrimary
+      Caption    15sp · Regular · colorTextSecondary
+      Label      14sp · Medium  · colorTextSecondary
     ════════════════════════════════════════════════════════════
     -->
     <style name="TextAppearance.App.Display" parent="TextAppearance.Material3.HeadlineLarge">
-        <item name="android:textSize">26sp</item>
+        <item name="android:textSize">27sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
         <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
     <style name="TextAppearance.App.Title" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">23sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
         <item name="android:lineSpacingMultiplier">1.2</item>
     </style>
 
     <style name="TextAppearance.App.Section" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">19sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>
 
     <style name="TextAppearance.App.Body" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
         <item name="android:lineSpacingMultiplier">1.4</item>
     </style>
 
     <style name="TextAppearance.App.Caption" parent="TextAppearance.Material3.BodySmall">
-        <item name="android:textSize">13sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:textColor">@color/colorTextSecondary</item>
     </style>
 
     <style name="TextAppearance.App.Label" parent="TextAppearance.Material3.LabelMedium">
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">15sp</item>
         <item name="android:textColor">@color/colorTextSecondary</item>
     </style>
 
@@ -93,9 +102,9 @@
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">52dp</item>
         <item name="android:textColor">@color/colorOnPrimary</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
@@ -115,9 +124,9 @@
         <item name="android:insetBottom">0dp</item>
         <item name="strokeColor">@android:color/transparent</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">52dp</item>
         <item name="android:textColor">@color/colorPrimaryDark</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
@@ -127,7 +136,7 @@
 
     <!--
     ════════════════════════════════════════════════════════════
-      CARD  —  white, 20dp radius, very soft shadow
+      CARD  —  warm surface, 20dp radius, soft shadow
     ════════════════════════════════════════════════════════════
     -->
     <style name="AppCard" parent="Widget.Material3.CardView.Elevated">
@@ -139,14 +148,14 @@
 
     <!-- Section label inside a card -->
     <style name="SectionTitle">
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorPrimaryDark</item>
     </style>
 
     <!-- Screen page title -->
     <style name="PageTitle">
-        <item name="android:textSize">22sp</item>
+        <item name="android:textSize">23sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/colorTextPrimary</item>
     </style>

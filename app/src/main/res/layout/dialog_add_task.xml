@@ -15,7 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="משימה חדשה"
-            android:textSize="22sp"
+            android:textSize="23sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextPrimary"
             android:gravity="center"
@@ -41,7 +41,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="שיוך לילד/ה"
-            android:textSize="13sp"
+            android:textSize="16sp"
             android:textColor="@color/colorTextSecondary"
             android:layout_marginBottom="6dp" />
 
@@ -72,7 +72,7 @@
             android:text="טרם נבחר תאריך"
             android:gravity="center"
             android:textColor="@color/colorTextSecondary"
-            android:textSize="13sp"
+            android:textSize="16sp"
             android:layout_marginBottom="8dp" />
 
     </LinearLayout>

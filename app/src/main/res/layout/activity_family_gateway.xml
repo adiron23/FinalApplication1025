@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ברוכים הבאים!"
-        android:textSize="26sp"
+        android:textSize="27sp"
         android:textStyle="bold"
         android:textColor="@color/colorTextPrimary"
         android:layout_marginBottom="8dp" />
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="האם להצטרף למשפחה קיימת או ליצור חדשה?"
-        android:textSize="14sp"
+        android:textSize="17sp"
         android:textColor="@color/colorTextSecondary"
         android:gravity="center"
         android:lineSpacingMultiplier="1.4"
@@ -68,7 +68,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+"
-                    android:textSize="26sp"
+                    android:textSize="27sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorPrimaryDark" />
             </LinearLayout>
@@ -83,7 +83,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="צור משפחה חדשה"
-                    android:textSize="16sp"
+                    android:textSize="19sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorTextPrimary" />
 
@@ -91,7 +91,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="הגדר את בני המשפחה ושתף קוד הצטרפות"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textColor="@color/colorTextSecondary"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
@@ -131,7 +131,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="→"
-                    android:textSize="22sp"
+                    android:textSize="23sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorOnPrimary" />
             </LinearLayout>
@@ -146,7 +146,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="הצטרף למשפחה קיימת"
-                    android:textSize="16sp"
+                    android:textSize="19sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorOnPrimary" />
 
@@ -154,7 +154,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="הכנס קוד שקיבלת מבן משפחה"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textColor="@color/colorOnPrimaryMuted"
                     android:layout_marginTop="3dp" />
             </LinearLayout>

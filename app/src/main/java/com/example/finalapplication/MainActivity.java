@@ -163,7 +163,7 @@ public class MainActivity extends BaseActivity {
             if (tasks.isEmpty()) {
                 tvTasksEmpty.setVisibility(View.VISIBLE);
                 tvTasksEmpty.setText("כל המשימות הושלמו!");
-                tvTasksEmpty.setTextColor(Color.parseColor("#388E3C"));
+                tvTasksEmpty.setTextColor(Color.parseColor("#43A047"));
             } else {
                 tvTasksEmpty.setVisibility(View.GONE);
                 int show = Math.min(3, tasks.size());
@@ -182,7 +182,7 @@ public class MainActivity extends BaseActivity {
         // Task name
         TextView tvName = new TextView(this);
         tvName.setText(task.getTaskName());
-        tvName.setTextSize(15);
+        tvName.setTextSize(18);
         tvName.setTypeface(null, Typeface.BOLD);
 
         // Colour name red if overdue
@@ -191,7 +191,7 @@ public class MainActivity extends BaseActivity {
             Date taskDate = task.getDateTime() != null ? sdf.parse(task.getDateTime()) : null;
             overdue = taskDate != null && taskDate.before(new Date());
         } catch (Exception ignored) {}
-        tvName.setTextColor(overdue ? Color.parseColor("#C62828") : Color.parseColor("#222222"));
+        tvName.setTextColor(overdue ? Color.parseColor("#C62828") : Color.parseColor("#3E2723"));
 
         row.addView(tvName);
 
@@ -199,7 +199,7 @@ public class MainActivity extends BaseActivity {
         if (task.getPriority() != null && "דחוף".equals(task.getPriority())) {
             TextView tvPriority = new TextView(this);
             tvPriority.setText("דחוף");
-            tvPriority.setTextSize(11);
+            tvPriority.setTextSize(14);
             tvPriority.setTextColor(Color.WHITE);
             tvPriority.setBackgroundColor(Color.parseColor("#C62828"));
             tvPriority.setPadding(10, 2, 10, 2);
@@ -214,8 +214,8 @@ public class MainActivity extends BaseActivity {
         }
         if (task.getDateTime() != null) detail.append(task.getDateTime());
         tvDetail.setText(detail.toString());
-        tvDetail.setTextSize(12);
-        tvDetail.setTextColor(Color.parseColor("#888888"));
+        tvDetail.setTextSize(15);
+        tvDetail.setTextColor(Color.parseColor("#8D6E63"));
         row.addView(tvDetail);
 
         tasksWidgetContainer.addView(row);
@@ -226,7 +226,7 @@ public class MainActivity extends BaseActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT, 1);
             lp.setMargins(0, 4, 0, 4);
             divider.setLayoutParams(lp);
-            divider.setBackgroundColor(Color.parseColor("#EEEEEE"));
+            divider.setBackgroundColor(Color.parseColor("#E8DDD3"));
             tasksWidgetContainer.addView(divider);
         }
     }
@@ -299,9 +299,9 @@ public class MainActivity extends BaseActivity {
 
         TextView tvTitle = new TextView(this);
         tvTitle.setText(title);
-        tvTitle.setTextSize(15);
+        tvTitle.setTextSize(18);
         tvTitle.setTypeface(null, Typeface.BOLD);
-        tvTitle.setTextColor(Color.parseColor("#1A1A1A"));
+        tvTitle.setTextColor(Color.parseColor("#3E2723"));
         textCol.addView(tvTitle);
 
         String subtitle = (!time.isEmpty() ? "🕐 " + time + "  " : "")
@@ -309,8 +309,8 @@ public class MainActivity extends BaseActivity {
         if (!subtitle.isEmpty()) {
             TextView tvAuthor = new TextView(this);
             tvAuthor.setText(subtitle);
-            tvAuthor.setTextSize(12);
-            tvAuthor.setTextColor(Color.parseColor("#6B7280"));
+            tvAuthor.setTextSize(15);
+            tvAuthor.setTextColor(Color.parseColor("#8D6E63"));
             tvAuthor.setPadding(0, 2, 0, 0);
             textCol.addView(tvAuthor);
         }
@@ -325,7 +325,7 @@ public class MainActivity extends BaseActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT, 1);
             lp.setMargins(0, 6, 0, 6);
             divider.setLayoutParams(lp);
-            divider.setBackgroundColor(Color.parseColor("#E5E7EB"));
+            divider.setBackgroundColor(Color.parseColor("#E8DDD3"));
             eventsWidgetContainer.addView(divider);
         }
     }
@@ -366,15 +366,15 @@ public class MainActivity extends BaseActivity {
 
         TextView tvName = new TextView(this);
         tvName.setText("• " + item.getName());
-        tvName.setTextSize(15);
-        tvName.setTextColor(Color.parseColor("#222222"));
+        tvName.setTextSize(18);
+        tvName.setTextColor(Color.parseColor("#3E2723"));
         row.addView(tvName);
 
         if (item.getAssignedToName() != null && !item.getAssignedToName().isEmpty()) {
             TextView tvAssignee = new TextView(this);
             tvAssignee.setText("מיועד ל: " + item.getAssignedToName());
-            tvAssignee.setTextSize(12);
-            tvAssignee.setTextColor(Color.parseColor("#888888"));
+            tvAssignee.setTextSize(15);
+            tvAssignee.setTextColor(Color.parseColor("#8D6E63"));
             row.addView(tvAssignee);
         }
 
@@ -386,7 +386,7 @@ public class MainActivity extends BaseActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT, 1);
             lp.setMargins(0, 4, 0, 4);
             divider.setLayoutParams(lp);
-            divider.setBackgroundColor(Color.parseColor("#EEEEEE"));
+            divider.setBackgroundColor(Color.parseColor("#E8DDD3"));
             shoppingWidgetContainer.addView(divider);
         }
     }

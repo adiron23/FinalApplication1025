@@ -52,7 +52,7 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
             holder.tvName.setTextColor(0xFFAAAAAA);
         } else {
             holder.tvName.setPaintFlags(holder.tvName.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.tvName.setTextColor(0xFF333333);
+            holder.tvName.setTextColor(0xFF3E2723);
         }
 
         String creator = (item.getCreatedBy() != null && !item.getCreatedBy().isEmpty())

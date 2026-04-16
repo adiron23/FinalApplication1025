@@ -5,60 +5,59 @@
 
     <!--
     ════════════════════════════════════════════════════════════
-      PRIMARY PALETTE  —  Mint / Turquoise Green
-      #60D68D is a LIGHT color (lum ≈ 0.55).
-      Always use colorOnPrimary (#0D2017) as text ON primary.
-      colorPrimaryDark (#27A85F) for links, borders, active nav.
+      PRIMARY PALETTE  —  Warm Brown / Espresso
+      colorPrimary is a DARK color — use cream (colorOnPrimary)
+      as text ON primary surfaces.
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorPrimary">#60D68D</color>
-    <color name="colorPrimaryDark">#27A85F</color>       <!-- 5.6:1 on white ✓ -->
-    <color name="colorPrimaryLight">#94E8B6</color>
-    <color name="colorPrimaryVeryLight">#E6FAF0</color>  <!-- nav indicator, chips -->
-    <color name="colorPrimaryContainer">#C8F0DB</color>
-    <color name="colorOnPrimary">#0D2017</color>         <!-- dark text ON mint surfaces (11:1) -->
-    <color name="colorOnPrimaryMuted">#2A5038</color>    <!-- secondary text on hero gradient -->
+    <color name="colorPrimary">#6D4C41</color>          <!-- medium brown -->
+    <color name="colorPrimaryDark">#4E342E</color>       <!-- deep espresso -->
+    <color name="colorPrimaryLight">#A1887F</color>      <!-- warm rose-brown -->
+    <color name="colorPrimaryVeryLight">#F5EDE8</color>  <!-- cream tint — nav indicator, chips -->
+    <color name="colorPrimaryContainer">#E8D5CC</color>  <!-- light container -->
+    <color name="colorOnPrimary">#FAF0E6</color>         <!-- linen cream — text ON brown surfaces -->
+    <color name="colorOnPrimaryMuted">#BCAAA4</color>    <!-- muted cream — secondary text on header -->
 
     <!-- Gradient endpoints (used in bg_header_gradient.xml) -->
-    <color name="colorGradientStart">#78E0AA</color>     <!-- lighter top -->
-    <color name="colorGradientEnd">#38BE72</color>       <!-- richer bottom -->
+    <color name="colorGradientStart">#8D6E63</color>     <!-- lighter warm brown top -->
+    <color name="colorGradientEnd">#5D4037</color>       <!-- deep brown bottom -->
 
     <!--
     ════════════════════════════════════════════════════════════
       BACKGROUNDS
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorBackground">#F6F8F7</color>        <!-- very light cool white -->
-    <color name="colorSurface">#FFFFFF</color>
-    <color name="colorSurfaceVariant">#EEF6F1</color>
+    <color name="colorBackground">#FAF0E6</color>        <!-- linen cream — warm and distinct from white -->
+    <color name="colorSurface">#FDF6EC</color>           <!-- soft cream card surface -->
+    <color name="colorSurfaceVariant">#EDE0D4</color>    <!-- warm tinted surface -->
 
     <!--
     ════════════════════════════════════════════════════════════
-      TEXT  (design spec values)
+      TEXT
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorTextPrimary">#1A1A1A</color>
-    <color name="colorTextSecondary">#6B7280</color>
-    <color name="colorTextHint">#9CA3AF</color>
+    <color name="colorTextPrimary">#3E2723</color>       <!-- dark espresso text -->
+    <color name="colorTextSecondary">#8D6E63</color>     <!-- warm brown secondary -->
+    <color name="colorTextHint">#BCAAA4</color>          <!-- muted hint text -->
 
     <!--
     ════════════════════════════════════════════════════════════
       UI CHROME
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorDivider">#E5E7EB</color>
-    <color name="colorIcon">#9CA3AF</color>              <!-- unselected nav -->
-    <color name="colorIconSelected">#27A85F</color>      <!-- selected nav (5.6:1 on white) -->
+    <color name="colorDivider">#E8DDD3</color>           <!-- warm light divider -->
+    <color name="colorIcon">#BCAAA4</color>              <!-- unselected nav icon -->
+    <color name="colorIconSelected">#6D4C41</color>      <!-- selected nav icon -->
 
     <!--
     ════════════════════════════════════════════════════════════
       SEMANTIC
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorError">#E5484D</color>             <!-- soft modern red -->
+    <color name="colorError">#E53935</color>
     <color name="colorErrorBg">#FFF0F0</color>
-    <color name="colorSuccess">#27A85F</color>
-    <color name="colorSuccessBg">#E5F7ED</color>
+    <color name="colorSuccess">#43A047</color>
+    <color name="colorSuccessBg">#E8F5E9</color>
     <color name="colorWarning">#D97706</color>
     <color name="colorWarningBg">#FFFBEB</color>
 
@@ -67,17 +66,17 @@
       TASK PRIORITY STRIPES
     ════════════════════════════════════════════════════════════
     -->
-    <color name="colorPriorityUrgent">#E5484D</color>
-    <color name="colorPriorityNormal">#60D68D</color>
-    <color name="colorPriorityLow">#27A85F</color>
+    <color name="colorPriorityUrgent">#E53935</color>
+    <color name="colorPriorityNormal">#6D4C41</color>
+    <color name="colorPriorityLow">#A1887F</color>
 
     <!--
     ════════════════════════════════════════════════════════════
-      CALENDAR  —  Turquoise accent (#40E0D0)
+      CALENDAR  —  Turquoise accent (#40E0D0) — unchanged
     ════════════════════════════════════════════════════════════
     -->
     <color name="colorCalendar">#40E0D0</color>
-    <color name="colorCalendarDark">#00897B</color>   <!-- dark text ON turquoise (6:1) -->
-    <color name="colorCalendarLight">#E0F7FA</color>  <!-- very light tint for subtle fills -->
+    <color name="colorCalendarDark">#00897B</color>
+    <color name="colorCalendarLight">#E0F7FA</color>
     <color name="colorCalendarSurface">#F7FFFE</color>
 </resources>

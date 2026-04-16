@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="משימות"
-                android:textSize="22sp"
+                android:textSize="23sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorTextPrimary" />
 
@@ -43,7 +43,7 @@
                     android:layout_height="wrap_content"
                     android:text="סנן:"
                     android:textColor="@color/colorTextSecondary"
-                    android:textSize="14sp"
+                    android:textSize="17sp"
                     android:layout_marginEnd="10dp" />
 
                 <Spinner

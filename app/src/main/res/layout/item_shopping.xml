@@ -37,7 +37,7 @@
                 android:id="@+id/tvItemName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                android:textSize="19sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorTextPrimary" />
 
@@ -52,14 +52,14 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:textSize="15sp"
                     android:textColor="@color/colorTextSecondary" />
 
                 <TextView
                     android:id="@+id/tvAssignedTo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:textSize="15sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorPrimary"
                     android:paddingHorizontal="8dp"

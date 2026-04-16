@@ -36,7 +36,7 @@
                 android:id="@+id/tvItemName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="15sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorTextPrimary" />
 
@@ -44,7 +44,7 @@
                 android:id="@+id/tvCreatedBy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:textColor="@color/colorTextSecondary"
                 android:layout_marginTop="3dp" />
         </LinearLayout>

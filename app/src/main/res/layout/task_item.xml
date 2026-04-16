@@ -52,7 +52,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:textSize="15sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorTextPrimary"
                     android:lineSpacingMultiplier="1.2" />
@@ -61,7 +61,7 @@
                     android:id="@+id/tvPriorityLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="11sp"
+                    android:textSize="14sp"
                     android:textColor="@color/white"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="3dp"
@@ -83,14 +83,14 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:textColor="@color/colorTextSecondary"
-                    android:textSize="13sp" />
+                    android:textSize="16sp" />
 
                 <TextView
                     android:id="@+id/tvTaskTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/colorPrimaryDark"
-                    android:textSize="12sp" />
+                    android:textSize="15sp" />
 
             </LinearLayout>
         </LinearLayout>

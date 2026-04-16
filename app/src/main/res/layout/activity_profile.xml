@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ══════════════════════════════════════════════════════════════
-   PROFILE — Showcase redesign
-   Header:  gradient bg (bg_header_gradient), curved 36dp bottom
-            centered avatar on semi-transparent white circle
-            name bold dark, email muted dark
-   Cards:   white, 20dp radius, 3dp shadow, float over header
-   Buttons: gradient primary, outline secondary, danger red
-   Grid:    8dp base unit, 20dp card padding, 16dp card margin
+   PROFILE — Warm Brown redesign
+   Header:  solid brown (#6D4C41), 200dp, curved 36dp bottom
+            centered cream avatar circle (88dp, 3dp cream border)
+            name bold cream, email muted rose-brown
+   Cards:   warm surface (#FDFAF5), 16dp radius, 1dp warm divider
+   Buttons: brown primary, outline secondary, danger red
   ══════════════════════════════════════════════════════════════
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -27,9 +26,7 @@
             android:orientation="vertical">
 
             <!-- ═══════════════════════════════════════════════════════
-                 GRADIENT HERO HEADER
-                 bg_header_gradient: #78E0AA → #38BE72, 36dp bottom curve
-                 Dark text ensures 11:1 contrast on all gradient stops
+                 SOLID BROWN HERO HEADER
                  ═══════════════════════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,39 +34,39 @@
                 android:orientation="vertical"
                 android:background="@drawable/bg_header_gradient"
                 android:gravity="center"
-                android:paddingTop="36dp"
-                android:paddingBottom="56dp"
+                android:paddingTop="40dp"
+                android:paddingBottom="60dp"
                 android:paddingHorizontal="24dp">
 
-                <!-- Avatar: white translucent circle on gradient -->
+                <!-- Avatar: cream circle with cream border -->
                 <ImageView
                     android:id="@+id/ivAvatar"
-                    android:layout_width="96dp"
-                    android:layout_height="96dp"
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
                     android:src="@drawable/ic_person"
-                    android:padding="22dp"
+                    android:padding="20dp"
                     android:background="@drawable/bg_circle_white"
                     android:scaleType="centerInside" />
 
-                <!-- Name — bold, near-black, high contrast on gradient -->
+                <!-- Name — bold cream -->
                 <TextView
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:textSize="22sp"
+                    android:textSize="23sp"
                     android:textStyle="bold"
                     android:textColor="@color/colorOnPrimary"
                     android:letterSpacing="-0.01"
                     android:text="שם משתמש" />
 
-                <!-- Email — muted but still readable (6:1) -->
+                <!-- Email — muted rose-brown -->
                 <TextView
                     android:id="@+id/tvUserEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:textColor="@color/colorOnPrimaryMuted"
                     android:text="email@example.com" />
 
@@ -92,7 +89,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    app:cardCornerRadius="20dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="3dp"
                     app:cardBackgroundColor="@color/colorSurface">
 
@@ -107,10 +104,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="פרטים אישיים"
-                            android:textSize="13sp"
-                            android:textColor="@color/colorPrimaryDark"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorPrimaryLight"
                             android:textStyle="bold"
-                            android:letterSpacing="0.05"
+                            android:letterSpacing="0.08"
                             android:layout_marginBottom="16dp" />
 
                         <!-- Birth date row -->
@@ -127,14 +124,14 @@
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
                                 android:text="תאריך לידה"
-                                android:textSize="14sp"
+                                android:textSize="16sp"
                                 android:textColor="@color/colorTextSecondary" />
 
                             <TextView
                                 android:id="@+id/tvUserBirthDate"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="14sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/colorTextPrimary"
                                 android:text="—" />
@@ -159,16 +156,16 @@
                                 android:layout_weight="1"
                                 android:layout_height="wrap_content"
                                 android:text="תפקיד"
-                                android:textSize="14sp"
+                                android:textSize="16sp"
                                 android:textColor="@color/colorTextSecondary" />
 
                             <TextView
                                 android:id="@+id/tvUserRole"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="14sp"
+                                android:textSize="17sp"
                                 android:textStyle="bold"
-                                android:textColor="@color/colorPrimaryDark"
+                                android:textColor="@color/colorPrimary"
                                 android:text="—" />
                         </LinearLayout>
 
@@ -180,7 +177,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
-                    app:cardCornerRadius="20dp"
+                    app:cardCornerRadius="16dp"
                     app:cardElevation="3dp"
                     app:cardBackgroundColor="@color/colorSurface">
 
@@ -195,10 +192,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="המשפחה שלי"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"
-                            android:textColor="@color/colorPrimaryDark"
-                            android:letterSpacing="0.05"
+                            android:textColor="@color/colorPrimaryLight"
+                            android:letterSpacing="0.08"
                             android:layout_marginBottom="16dp" />
 
                         <LinearLayout
@@ -211,7 +208,6 @@
                 </androidx.cardview.widget.CardView>
 
                 <!-- ── Actions ────────────────────────────────────── -->
-                <!-- 24dp spacing above buttons (3 × 8dp grid) -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="12dp" />

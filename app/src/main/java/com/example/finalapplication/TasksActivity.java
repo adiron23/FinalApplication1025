@@ -359,15 +359,8 @@ public class TasksActivity extends BaseActivity {
                 try { overdue = sdf.parse(task.getDateTime()).before(new java.util.Date()); }
                 catch (Exception ignored) {}
             }
-            if (overdue) {
-                holder.priorityStripe.setBackgroundColor(0xFFE53935);
-                holder.tvPriorityLabel.setVisibility(View.VISIBLE);
-                holder.tvPriorityLabel.setText("איחור!");
-                holder.tvPriorityLabel.setBackgroundColor(0xFFE53935);
-            } else {
-                holder.priorityStripe.setBackgroundColor(0xFF60D68D);
-                holder.tvPriorityLabel.setVisibility(View.GONE);
-            }
+            holder.priorityStripe.setBackgroundColor(overdue ? 0xFFE53935 : 0xFF6D4C41);
+            holder.tvPriorityLabel.setVisibility(View.GONE);
 
             // ── Done visual ───────────────────────────────────────────────────
             if (task.isDone()) {
@@ -378,7 +371,7 @@ public class TasksActivity extends BaseActivity {
             } else {
                 holder.tvTitle.setPaintFlags(
                         holder.tvTitle.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
-                holder.tvTitle.setTextColor(Color.parseColor("#12122A"));
+                holder.tvTitle.setTextColor(Color.parseColor("#3E2723"));
                 holder.itemView.setAlpha(1f);
             }
 

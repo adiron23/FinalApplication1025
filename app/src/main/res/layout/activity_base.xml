@@ -27,7 +27,7 @@
             android:gravity="center"
             android:text="Family App"
             android:textColor="@color/colorPrimaryDark"
-            android:textSize="17sp"
+            android:textSize="19sp"
             android:textStyle="bold" />
 
     </androidx.appcompat.widget.Toolbar>

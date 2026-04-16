@@ -21,7 +21,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="רשימת קניות"
-            android:textSize="22sp"
+            android:textSize="23sp"
             android:textStyle="bold"
             android:textColor="@color/colorTextPrimary" />
 
@@ -86,7 +86,7 @@
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:text="נקה שנקנו"
-            android:textSize="13sp"
+            android:textSize="16sp"
             android:textColor="@color/white"
             android:textAllCaps="false"
             android:background="@drawable/bg_btn_danger"
@@ -102,7 +102,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
         android:text="הרשימה ריקה"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:textColor="@color/colorTextSecondary"
         android:gravity="center"
         android:visibility="gone" />

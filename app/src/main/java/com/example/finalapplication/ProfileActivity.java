@@ -275,7 +275,7 @@ public class ProfileActivity extends BaseActivity {
                 new android.widget.LinearLayout.LayoutParams(0,
                         android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         textView.setLayoutParams(tvParams);
-        textView.setTextSize(16);
+        textView.setTextSize(19);
         textView.setPadding(0, 15, 0, 15);
         textView.setTextColor(Color.BLACK);
         String text = (name != null ? name : "") + " (" + (role != null ? role : "") + ")";
@@ -291,7 +291,7 @@ public class ProfileActivity extends BaseActivity {
                             android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
             btnRemove.setLayoutParams(btnParams);
             btnRemove.setText("הסר");
-            btnRemove.setTextSize(12);
+            btnRemove.setTextSize(15);
             btnRemove.setTextColor(Color.WHITE);
             btnRemove.setBackgroundTintList(
                     android.content.res.ColorStateList.valueOf(Color.parseColor("#B71C1C")));

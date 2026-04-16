@@ -15,7 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="הגדרת משפחה"
-            android:textSize="36sp"
+            android:textSize="37sp"
             android:textStyle="bold"
             android:textColor="#1A237E"
             app:layout_constraintTop_toTopOf="parent"
