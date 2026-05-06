@@ -124,8 +124,6 @@ public class MainActivity extends BaseActivity {
         });
     }
 
-    // ── Tasks widget ──────────────────────────────────────────────────────────
-
     private void loadTasksWidget() {
         Query query = isParent
                 ? db.collection("tasks").whereEqualTo("familyCode", userFamilyCode)
@@ -144,10 +142,10 @@ public class MainActivity extends BaseActivity {
             tasks.sort((a, b) -> {
                 try {
                     Date da  = a.getDateTime() != null ? sdf.parse(a.getDateTime()) : null;
-                    Date db2 = b.getDateTime() != null ? sdf.parse(b.getDateTime()) : null;
+                    Date taskDateB = b.getDateTime() != null ? sdf.parse(b.getDateTime()) : null;
                     if (da == null) return 1;
-                    if (db2 == null) return -1;
-                    return da.compareTo(db2);
+                    if (taskDateB == null) return -1;
+                    return da.compareTo(taskDateB);
                 } catch (Exception e) { return 0; }
             });
 
@@ -231,8 +229,6 @@ public class MainActivity extends BaseActivity {
             tasksWidgetContainer.addView(divider);
         }
     }
-
-    // ── Today's events widget ─────────────────────────────────────────────────
 
     private void loadTodayEventsWidget() {
         Calendar c = Calendar.getInstance();
@@ -331,8 +327,6 @@ public class MainActivity extends BaseActivity {
             eventsWidgetContainer.addView(divider);
         }
     }
-
-    // ── Shopping widget ───────────────────────────────────────────────────────
 
     private void loadShoppingWidget() {
         db.collection("shopping_lists")

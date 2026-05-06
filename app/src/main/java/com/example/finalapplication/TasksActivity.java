@@ -106,7 +106,7 @@ public class TasksActivity extends BaseActivity {
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
     }
 
-    // ── Setup ─────────────────────────────────────────────────────────────────
+
 
     private void checkPermissionsAndLoadData() {
         db.collection("users").document(currentUid).get().addOnSuccessListener(doc -> {
@@ -161,7 +161,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
-    // ── Data loading ──────────────────────────────────────────────────────────
+
 
     /**
      * Both parents and children query ALL family tasks.
@@ -220,7 +220,7 @@ public class TasksActivity extends BaseActivity {
         scheduleAlarmsForMyTasks();
     }
 
-    // ── Alarm scheduling ──────────────────────────────────────────────────────
+
 
     private void scheduleAlarmsForMyTasks() {
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -254,7 +254,7 @@ public class TasksActivity extends BaseActivity {
         }
     }
 
-    // ── Add task dialog ───────────────────────────────────────────────────────
+
 
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -318,7 +318,7 @@ public class TasksActivity extends BaseActivity {
                         "שגיאה בטעינת ילדים: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
-    // ── Firestore writes ──────────────────────────────────────────────────────
+
 
     private void saveTask(String title, String cUid, String cName, String time) {
         Map<String, Object> task = new HashMap<>();
@@ -348,8 +348,6 @@ public class TasksActivity extends BaseActivity {
                         Toast.makeText(this, "המשימה נמחקה", Toast.LENGTH_SHORT).show());
     }
 
-    // ── Adapter ───────────────────────────────────────────────────────────────
-
     private class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         private final List<Task> list;
         TaskAdapter(List<Task> list) { this.list = list; }
@@ -366,14 +364,12 @@ public class TasksActivity extends BaseActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Task task = list.get(position);
 
-            // ── Text ──────────────────────────────────────────────────────────
             holder.tvTitle.setText(task.getTaskName());
             String assigneeName = task.getAssignedToName();
             holder.tvAssignee.setText("מיועד ל: " +
                     (assigneeName != null && !assigneeName.isEmpty() ? assigneeName : EVERYONE_LABEL));
             holder.tvTime.setText(task.getDateTime() != null ? task.getDateTime() : "");
 
-            // ── Overdue stripe ────────────────────────────────────────────────
             boolean overdue = false;
             if (!task.isDone() && task.getDateTime() != null && !task.getDateTime().isEmpty()) {
                 try { overdue = sdf.parse(task.getDateTime()).before(new java.util.Date()); }
@@ -388,7 +384,6 @@ public class TasksActivity extends BaseActivity {
             holder.tvTitle.setTextColor(Color.parseColor("#3E2723"));
             holder.itemView.setAlpha(1f);
 
-            // ── Checkbox — tap to mark done ───────────────────────────────────
             // Determine if this user is allowed to complete this task
             String assignedUid = task.getAssignedToUid() != null ? task.getAssignedToUid() : "";
             boolean isMyTask   = assignedUid.equals(currentUid);
@@ -406,7 +401,6 @@ public class TasksActivity extends BaseActivity {
                 });
             }
 
-            // ── Long-press: parent deletes ────────────────────────────────────
             if ("הורה".equals(userRole)) {
                 holder.itemView.setOnLongClickListener(v -> {
                     new AlertDialog.Builder(TasksActivity.this)

@@ -55,8 +55,6 @@ public class JournalActivity extends BaseActivity {
         fabAddEntry.setOnClickListener(v -> showAddEntryDialog());
     }
 
-    // ── Bootstrap ─────────────────────────────────────────────────────────────
-
     private void loadUserThenEntries() {
         db.collection("users").document(currentUid).get()
                 .addOnSuccessListener(doc -> {
@@ -67,8 +65,6 @@ public class JournalActivity extends BaseActivity {
                     listenToEntries();
                 });
     }
-
-    // ── Firestore listener ────────────────────────────────────────────────────
 
     private void listenToEntries() {
         db.collection("journal")
@@ -85,8 +81,6 @@ public class JournalActivity extends BaseActivity {
                     adapter.notifyDataSetChanged();
                 });
     }
-
-    // ── Add entry dialog ──────────────────────────────────────────────────────
 
     private void showAddEntryDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_journal_entry, null);
@@ -107,8 +101,6 @@ public class JournalActivity extends BaseActivity {
                 .show();
     }
 
-    // ── Firestore writes ──────────────────────────────────────────────────────
-
     private void saveEntry(String text) {
         Map<String, Object> entry = new HashMap<>();
         entry.put("text",       text);
@@ -128,8 +120,6 @@ public class JournalActivity extends BaseActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "שגיאה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
-
-    // ── Adapter ───────────────────────────────────────────────────────────────
 
     private class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.ViewHolder> {
         private final List<JournalEntry> list;

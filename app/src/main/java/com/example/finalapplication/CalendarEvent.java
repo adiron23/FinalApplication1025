@@ -21,13 +21,13 @@ public class CalendarEvent {
     public void   setEventId(String id)     { this.eventId = id; }
 
     public String getTitle()                { return title; }
-    public void   setTitle(String t)        { this.title = t; }
+    public void   setTitle(String title)     { this.title = title; }
 
     public String getNotes()                { return notes; }
-    public void   setNotes(String n)        { this.notes = n; }
+    public void   setNotes(String notes)    { this.notes = notes; }
 
     public String getDate()                 { return date; }
-    public void   setDate(String d)         { this.date = d; }
+    public void   setDate(String date)      { this.date = date; }
 
     public String getFamilyCode()           { return familyCode; }
     public void   setFamilyCode(String fc)  { this.familyCode = fc; }
@@ -36,12 +36,12 @@ public class CalendarEvent {
     public void   setAuthorUid(String uid)  { this.authorUid = uid; }
 
     public String getAuthorName()           { return authorName; }
-    public void   setAuthorName(String n)   { this.authorName = n; }
+    public void   setAuthorName(String name) { this.authorName = name; }
 
     public long   getTimestamp()            { return timestamp; }
     public void   setTimestamp(long ts)     { this.timestamp = ts; }
 
     private String time; // "HH:mm", optional
     public String getTime()               { return time; }
-    public void   setTime(String t)       { this.time = t; }
+    public void   setTime(String time)    { this.time = time; }
 }

@@ -13,7 +13,6 @@ public class Task {
     // קונסטרקטור ריק חובה עבור פיירבייס
     public Task() {}
 
-    // --- Getters & Setters ---
     // אלו הפונקציות שמאפשרות ל-TasksActivity "להבין" את הנתונים
 
     public String getTaskId() { return taskId; }

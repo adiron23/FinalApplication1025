@@ -76,7 +76,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
         btnJoinFamily.setOnClickListener(v -> showJoinCodeDialog());
     }
 
-    // ── Code entry dialog ──────────────────────────────────────────────────────
+
 
     private void showJoinCodeDialog() {
         EditText input = new EditText(this);
@@ -95,7 +95,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 .show();
     }
 
-    // ── Join flow entry point ──────────────────────────────────────────────────
+
 
     /**
      * Step 1 — Validate the code, then compute unclaimed slots and route accordingly.
@@ -145,8 +145,8 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                                 // Compute unclaimed slots: entries whose name part is not yet taken
                                 List<String> unclaimed = new ArrayList<>();
                                 for (String entry : finalAvailableRoles) {
-                                    String[] p = entry.split(":", 2);
-                                    String entryName = p[0].trim().toLowerCase();
+                                    String[] parts = entry.split(":", 2);
+                                    String entryName = parts[0].trim().toLowerCase();
                                     if (!claimedNames.contains(entryName)) {
                                         unclaimed.add(entry);
                                     }
@@ -167,7 +167,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 });
     }
 
-    // ── Claim resolution ───────────────────────────────────────────────────────
+
 
     /**
      * Step 3 — match user's registered name against unclaimed slots.
@@ -265,7 +265,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 });
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+
 
     private void setLoading(boolean loading) {
         if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);

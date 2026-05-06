@@ -102,13 +102,13 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
                 ShoppingItem o = items.get(oldPos);
                 ShoppingItem n = newItems.get(newPos);
                 return o.isChecked() == n.isChecked()
-                        && strEq(o.getName(), n.getName())
-                        && strEq(o.getCreatedBy(), n.getCreatedBy())
-                        && strEq(o.getAssignedToName(), n.getAssignedToName());
+                        && areStringsEqual(o.getName(), n.getName())
+                        && areStringsEqual(o.getCreatedBy(), n.getCreatedBy())
+                        && areStringsEqual(o.getAssignedToName(), n.getAssignedToName());
             }
 
-            private boolean strEq(String a, String b) {
-                return a == null ? b == null : a.equals(b);
+            private boolean areStringsEqual(String s1, String s2) {
+                return s1 == null ? s2 == null : s1.equals(s2);
             }
         });
         items.clear();

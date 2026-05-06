@@ -78,8 +78,6 @@ public class LogInActivity extends AppCompatActivity {
         }
     }
 
-    // ── Email / Password login ────────────────────────────────────────────────
-
     private void loginUser() {
         String email = eTEmail.getText().toString().trim();
         String pass  = eTPass.getText().toString().trim();
@@ -108,8 +106,6 @@ public class LogInActivity extends AppCompatActivity {
                     }
                 });
     }
-
-    // ── Google Sign-In ────────────────────────────────────────────────────────
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -143,8 +139,6 @@ public class LogInActivity extends AppCompatActivity {
                 });
     }
 
-    // ── Post-login navigation ─────────────────────────────────────────────────
-
     private void navigateAfterLogin() {
         String pendingCode = getSharedPreferences("family_prefs", MODE_PRIVATE)
                 .getString("pending_family_code", null);
@@ -154,8 +148,6 @@ public class LogInActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-    // ── Password reset ────────────────────────────────────────────────────────
 
     private void showPasswordResetDialog() {
         String currentEmail = eTEmail.getText().toString().trim();

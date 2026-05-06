@@ -46,7 +46,6 @@ public class CalendarActivity extends BaseActivity {
     };
     private static final String[] DAY_HEADERS = {"א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"};
 
-    // ── Views ─────────────────────────────────────────────────────────────────
     private TextView         tvMonthYear, tvEventsHeader;
     private ImageButton      btnPrev, btnNext;
     private LinearLayout     rowDayHeaders, layoutEmptyEvents;
@@ -70,8 +69,6 @@ public class CalendarActivity extends BaseActivity {
     private final List<CalendarEvent> monthEvents = new ArrayList<>();
 
     private static final int REQUEST_CALENDAR_PERMISSION = 201;
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

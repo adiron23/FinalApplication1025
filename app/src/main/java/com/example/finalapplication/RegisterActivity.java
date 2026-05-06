@@ -146,7 +146,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
-    // ── Image source chooser ──────────────────────────────────────────────────
+
 
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "בחר אווטאר"};
@@ -226,7 +226,7 @@ public class RegisterActivity extends AppCompatActivity {
         holder[0].show();
     }
 
-    // ── Firestore user check ──────────────────────────────────────────────────
+
 
     private void checkUserStatusAndNavigate(String uid) {
         FirebaseFirestore.getInstance().collection("users").document(uid).get()
@@ -241,7 +241,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
-    // ── Google Sign-In (still uses onActivityResult — not changed) ────────────
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -305,7 +305,7 @@ public class RegisterActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage()));
     }
 
-    // ── Email / Password registration ─────────────────────────────────────────
+
 
     private void registerUser() {
         String email = eTEmail.getText().toString().trim();

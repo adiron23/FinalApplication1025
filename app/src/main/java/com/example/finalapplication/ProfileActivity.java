@@ -136,8 +136,6 @@ public class ProfileActivity extends BaseActivity {
         if (btnEditProfile != null) btnEditProfile.setOnClickListener(v -> showEditProfileDialog());
     }
 
-    // ── Load profile ──────────────────────────────────────────────────────────
-
     private void loadUserProfile(String uid) {
         db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
             if (!doc.exists()) return;
@@ -187,8 +185,6 @@ public class ProfileActivity extends BaseActivity {
             }
         }
     }
-
-    // ── Family data — sorted: parents first ──────────────────────────────────
 
     private void loadFamilyData(String familyCode, String uid) {
         db.collection("families").document(familyCode).get().addOnSuccessListener(doc -> {
@@ -252,7 +248,7 @@ public class ProfileActivity extends BaseActivity {
         familyContainer.addView(card);
     }
 
-    // ── Edit profile ──────────────────────────────────────────────────────────
+
 
     private void showEditProfileDialog() {
         pendingImageUri   = null;
@@ -311,7 +307,7 @@ public class ProfileActivity extends BaseActivity {
         dialog.show();
     }
 
-    // ── Image source chooser ─────────────────────────────────────────────────
+
 
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "אווטאר מוכן"};
@@ -455,7 +451,7 @@ public class ProfileActivity extends BaseActivity {
         }
     }
 
-    // ── Password reset ────────────────────────────────────────────────────────
+
 
     private void sendPasswordResetEmail() {
         if (currentEmail.isEmpty()) {
@@ -474,7 +470,7 @@ public class ProfileActivity extends BaseActivity {
                         Toast.makeText(this, "שגיאה: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
-    // ── Name propagation ──────────────────────────────────────────────────────
+
 
     private void propagateNameChange(String oldName, String newName) {
         db.collection("tasks")
@@ -504,10 +500,6 @@ public class ProfileActivity extends BaseActivity {
                         doc.getReference().update("createdBy", newName);
                 });
     }
-
-    // ── Invite ────────────────────────────────────────────────────────────────
-
-    // ── Add member chooser ────────────────────────────────────────────────────
 
     private void showAddMemberChooser() {
         String[] options = {"שלח הזמנה (קישור / קוד)", "צור חשבון חדש עבורם"};
@@ -632,7 +624,7 @@ public class ProfileActivity extends BaseActivity {
                 .show();
     }
 
-    // ── Remove member ─────────────────────────────────────────────────────────
+
 
     private void confirmRemoveMember(String memberId, String memberName) {
         new AlertDialog.Builder(this)
