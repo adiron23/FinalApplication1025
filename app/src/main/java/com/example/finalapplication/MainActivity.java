@@ -116,6 +116,7 @@ public class MainActivity extends BaseActivity {
                 });
                 loadTasksWidget();
                 loadShoppingWidget();
+                loadTodayEventsWidget();
             } else {
                 tVWelcome.setText(greeting + ", " + (name != null ? name : ""));
                 tvFamilyName.setVisibility(android.view.View.GONE);
@@ -261,14 +262,15 @@ public class MainActivity extends BaseActivity {
                         if (tb == null) return -1;
                         return Long.compare(ta, tb);
                     });
-                    for (int i = 0; i < docs.size(); i++) {
+                    int showCount = Math.min(3, docs.size());
+                    for (int i = 0; i < showCount; i++) {
                         String title  = docs.get(i).getString("title");
                         String author = docs.get(i).getString("authorName");
                         String time   = docs.get(i).getString("time");
                         addEventRow(title  != null ? title  : "",
                                     author != null ? author : "",
                                     time   != null ? time   : "",
-                                    i < docs.size() - 1);
+                                    i < showCount - 1);
                     }
                 });
     }
@@ -343,7 +345,7 @@ public class MainActivity extends BaseActivity {
                         ShoppingItem item = doc.toObject(ShoppingItem.class);
                         if (item != null && !item.isChecked()) {
                             items.add(item);
-                            if (items.size() == 4) break;
+                            if (items.size() == 3) break;
                         }
                     }
 

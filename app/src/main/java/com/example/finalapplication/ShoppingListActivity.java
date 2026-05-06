@@ -100,6 +100,8 @@ public class ShoppingListActivity extends BaseActivity {
                 if (isParent) {
                     addRow.setVisibility(View.VISIBLE);
                     btnClearBought.setVisibility(View.VISIBLE);
+                } else if (ageFromBirthDate(doc.getString("birthDate")) >= 12) {
+                    addRow.setVisibility(View.VISIBLE);
                 }
 
                 if (familyCode != null) {
@@ -152,6 +154,10 @@ public class ShoppingListActivity extends BaseActivity {
             Toast.makeText(this, "מזהה משפחה חסר, נסה שוב", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (memberUids.isEmpty()) {
+            Toast.makeText(this, "טוען חברי משפחה, נסה שנית", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Spinner spinner = new Spinner(this);
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
@@ -182,6 +188,22 @@ public class ShoppingListActivity extends BaseActivity {
         db.collection("shopping_lists").document(item.getId()).delete()
                 .addOnFailureListener(e -> Toast.makeText(this,
                         "שגיאה במחיקה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    /** Returns the user's age from a "d/M/yyyy" birth-date string, or -1 if unparseable. */
+    private int ageFromBirthDate(String birthDate) {
+        if (birthDate == null || birthDate.isEmpty()) return -1;
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("d/M/yyyy", java.util.Locale.getDefault());
+            java.util.Calendar birth = java.util.Calendar.getInstance();
+            birth.setTime(sdf.parse(birthDate));
+            java.util.Calendar today = java.util.Calendar.getInstance();
+            int age = today.get(java.util.Calendar.YEAR) - birth.get(java.util.Calendar.YEAR);
+            if (today.get(java.util.Calendar.DAY_OF_YEAR) < birth.get(java.util.Calendar.DAY_OF_YEAR)) age--;
+            return age;
+        } catch (Exception e) {
+            return -1;
+        }
     }
 
     private void clearBoughtItems() {

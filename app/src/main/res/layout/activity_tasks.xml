@@ -35,23 +35,42 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
+                android:padding="10dp"
+                android:background="@drawable/bg_filter_card"
                 android:visibility="gone">
+
+                <!-- Filter icon -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔍"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="סנן:"
-                    android:textColor="@color/colorTextSecondary"
-                    android:textSize="17sp"
-                    android:layout_marginEnd="10dp" />
+                    android:text="סנן לפי:"
+                    android:textColor="@color/colorPrimary"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="8dp" />
 
                 <Spinner
                     android:id="@+id/spinnerFilter"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="44dp"
-                    android:background="@android:drawable/btn_dropdown" />
+                    android:layout_height="40dp"
+                    android:background="@android:color/transparent" />
+
+                <!-- Animated chevron arrow -->
+                <ImageView
+                    android:id="@+id/ivFilterArrow"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_chevron_down"
+                    android:layout_marginStart="4dp" />
 
             </LinearLayout>
         </LinearLayout>

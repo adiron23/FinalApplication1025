@@ -34,8 +34,12 @@ public class Task {
     public String getFamilyCode() { return familyCode; }
     public void setFamilyCode(String familyCode) { this.familyCode = familyCode; }
 
-    // זו הפונקציה שחסרה לך!
+    // @PropertyName tells Firestore to use "isDone" as the field name,
+    // overriding the JavaBean convention that would strip the "is" prefix.
+    @com.google.firebase.firestore.PropertyName("isDone")
     public boolean isDone() { return isDone; }
+
+    @com.google.firebase.firestore.PropertyName("isDone")
     public void setDone(boolean done) { isDone = done; }
 
     public String getPriority() { return priority; }

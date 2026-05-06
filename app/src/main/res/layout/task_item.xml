@@ -8,6 +8,7 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/taskCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
@@ -95,7 +96,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Checkbox — dark green tint, readable white tick -->
+        <!-- Checkbox — colorPrimaryDark tint for readable white tick -->
         <CheckBox
             android:id="@+id/cbTaskDone"
             android:layout_width="wrap_content"

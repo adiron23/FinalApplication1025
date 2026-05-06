@@ -13,11 +13,13 @@ import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -46,6 +48,8 @@ public class TasksActivity extends BaseActivity {
     private RecyclerView rvTasks;
     private LinearLayout filterBar;
     private Spinner spinnerFilter;
+    private ImageView ivFilterArrow;
+    private boolean filterArrowUp = false;
     private FirebaseFirestore db;
     private String userFamilyCode, userRole, currentUid;
     private TaskAdapter adapter;
@@ -71,6 +75,19 @@ public class TasksActivity extends BaseActivity {
         rvTasks       = findViewById(R.id.rvTasks);
         filterBar     = findViewById(R.id.filterBar);
         spinnerFilter = findViewById(R.id.spinnerFilter);
+        ivFilterArrow = findViewById(R.id.ivFilterArrow);
+
+        // Animate arrow when spinner is touched
+        spinnerFilter.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                filterArrowUp = !filterArrowUp;
+                ivFilterArrow.animate()
+                        .rotation(filterArrowUp ? 180f : 0f)
+                        .setDuration(220)
+                        .start();
+            }
+            return false;
+        });
 
         rvTasks.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TaskAdapter(filteredList);
@@ -131,6 +148,10 @@ public class TasksActivity extends BaseActivity {
                                 new android.widget.AdapterView.OnItemSelectedListener() {
                                     @Override public void onItemSelected(
                                             android.widget.AdapterView<?> p, View v, int pos, long id) {
+                                        // Reset arrow to pointing-down when selection is made
+                                        filterArrowUp = false;
+                                        if (ivFilterArrow != null)
+                                            ivFilterArrow.animate().rotation(0f).setDuration(220).start();
                                         applyFilter(filterUids.get(pos));
                                     }
                                     @Override public void onNothingSelected(android.widget.AdapterView<?> p) {}
@@ -183,14 +204,13 @@ public class TasksActivity extends BaseActivity {
     private void applyFilter(String filterUid) {
         filteredList.clear();
         for (Task t : taskList) {
+            if (t.isDone()) continue;   // done tasks are hidden from the active list
             String assignedUid = t.getAssignedToUid() != null ? t.getAssignedToUid() : "";
             if ("הורה".equals(userRole)) {
-                // Parent filter: empty = all; otherwise match specific child uid
                 if (filterUid.isEmpty() || filterUid.equals(assignedUid)) {
                     filteredList.add(t);
                 }
             } else {
-                // Child: see tasks assigned personally OR tasks assigned to everyone
                 if (assignedUid.equals(currentUid) || assignedUid.equals(EVERYONE)) {
                     filteredList.add(t);
                 }
@@ -362,18 +382,11 @@ public class TasksActivity extends BaseActivity {
             holder.priorityStripe.setBackgroundColor(overdue ? 0xFFE53935 : 0xFF6D4C41);
             holder.tvPriorityLabel.setVisibility(View.GONE);
 
-            // ── Done visual ───────────────────────────────────────────────────
-            if (task.isDone()) {
-                holder.tvTitle.setPaintFlags(
-                        holder.tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                holder.tvTitle.setTextColor(Color.parseColor("#AAAAAA"));
-                holder.itemView.setAlpha(0.55f);
-            } else {
-                holder.tvTitle.setPaintFlags(
-                        holder.tvTitle.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
-                holder.tvTitle.setTextColor(Color.parseColor("#3E2723"));
-                holder.itemView.setAlpha(1f);
-            }
+            // All visible tasks are undone — reset any recycled state
+            holder.tvTitle.setPaintFlags(
+                    holder.tvTitle.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.tvTitle.setTextColor(Color.parseColor("#3E2723"));
+            holder.itemView.setAlpha(1f);
 
             // ── Checkbox — tap to mark done ───────────────────────────────────
             // Determine if this user is allowed to complete this task
