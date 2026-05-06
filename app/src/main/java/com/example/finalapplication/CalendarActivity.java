@@ -44,7 +44,6 @@ public class CalendarActivity extends BaseActivity {
             "ינואר","פברואר","מרץ","אפריל","מאי","יוני",
             "יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"
     };
-    // Sunday … Saturday in Hebrew (week starts Sunday in Israel)
     private static final String[] DAY_HEADERS = {"א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"};
 
     // ── Views ─────────────────────────────────────────────────────────────────
@@ -54,7 +53,6 @@ public class CalendarActivity extends BaseActivity {
     private RecyclerView     rvDays, rvEvents;
     private FloatingActionButton fabAddEvent;
 
-    // ── State ─────────────────────────────────────────────────────────────────
     private FirebaseFirestore db;
     private String currentUid, currentName, userFamilyCode, userRole;
 
@@ -84,7 +82,6 @@ public class CalendarActivity extends BaseActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Normalise to 1st of month
         displayedMonth.set(Calendar.DAY_OF_MONTH, 1);
 
         bindViews();
@@ -99,8 +96,6 @@ public class CalendarActivity extends BaseActivity {
 
         loadUserThenMonth();
     }
-
-    // ── Setup ─────────────────────────────────────────────────────────────────
 
     private void bindViews() {
         tvMonthYear       = findViewById(R.id.tvMonthYear);
@@ -157,7 +152,6 @@ public class CalendarActivity extends BaseActivity {
         if (userFamilyCode != null) loadMonthDots();
     }
 
-    // ── Data loading ──────────────────────────────────────────────────────────
 
     private void loadUserThenMonth() {
         db.collection("users").document(currentUid).get()
@@ -170,7 +164,6 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
-    /** Query all family events, filter to displayed month client-side — no composite index needed. */
     private void loadMonthDots() {
         int year    = displayedMonth.get(Calendar.YEAR);
         int month   = displayedMonth.get(Calendar.MONTH) + 1;
@@ -211,7 +204,6 @@ public class CalendarActivity extends BaseActivity {
                         e.setEventId(doc.getId());
                         dayEvents.add(e);
                     }
-                    // Sort by timestamp client-side — no composite index needed
                     dayEvents.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
                     eventAdapter.notifyDataSetChanged();
                     boolean empty = dayEvents.isEmpty();
@@ -222,7 +214,6 @@ public class CalendarActivity extends BaseActivity {
                         Toast.makeText(this, "שגיאה בטעינת אירועים: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
-    // ── Grid builder ──────────────────────────────────────────────────────────
 
     private void buildGrid() {
         updateHeader();
@@ -232,7 +223,6 @@ public class CalendarActivity extends BaseActivity {
         cal.set(Calendar.DAY_OF_MONTH, 1);
         int firstDow   = cal.get(Calendar.DAY_OF_WEEK); // Sunday=1
 
-        // Leading empty cells
         for (int i = 1; i < firstDow; i++) {
             dayItems.add(new DayItem(0, false, false, false));
         }
@@ -262,7 +252,6 @@ public class CalendarActivity extends BaseActivity {
         tvMonthYear.setText(text);
     }
 
-    // ── Add event ─────────────────────────────────────────────────────────────
 
     private void showAddEventDialog() {
         String target = selectedDate != null ? selectedDate : todayStr();
@@ -331,8 +320,6 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     private String dateStr(int year, int month, int day) {
         return String.format(Locale.US, "%04d-%02d-%02d", year, month, day);
     }
@@ -350,8 +337,6 @@ public class CalendarActivity extends BaseActivity {
         } catch (Exception e) { return iso; }
     }
 
-    // ── Day data model ────────────────────────────────────────────────────────
-
     private static class DayItem {
         final int     day;
         final boolean isToday;
@@ -362,15 +347,12 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
-    // ── Day grid adapter ──────────────────────────────────────────────────────
-
     private class DayAdapter extends RecyclerView.Adapter<DayAdapter.VH> {
 
         @NonNull @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.calendar_day_cell, parent, false);
-            // Force square: height == 1/7 of the grid width
             int side = parent.getMeasuredWidth() / 7;
             if (side > 0) {
                 v.setLayoutParams(new RecyclerView.LayoutParams(
@@ -384,7 +366,6 @@ public class CalendarActivity extends BaseActivity {
             DayItem item = dayItems.get(position);
 
             if (item.day == 0) {
-                // Empty padding cell
                 h.tvDay.setText("");
                 h.circle.setBackground(null);
                 h.dot.setVisibility(View.INVISIBLE);
@@ -396,14 +377,11 @@ public class CalendarActivity extends BaseActivity {
             h.dot.setVisibility(item.hasEvents ? View.VISIBLE : View.INVISIBLE);
             h.itemView.setClickable(true);
 
-            // ── Circle state ──────────────────────────────────────────────
             if (item.isToday) {
-                // Filled turquoise — today always gets the solid circle
                 h.circle.setBackgroundResource(R.drawable.bg_circle_turquoise);
                 h.tvDay.setTextColor(0xFF004D40);  // dark teal, 6:1 on #40E0D0
                 h.tvDay.setTypeface(null, Typeface.BOLD);
             } else if (item.isSelected) {
-                // Outlined turquoise ring
                 h.circle.setBackgroundResource(R.drawable.bg_circle_selected);
                 h.tvDay.setTextColor(0xFF3E2723);
                 h.tvDay.setTypeface(null, Typeface.BOLD);
@@ -414,7 +392,6 @@ public class CalendarActivity extends BaseActivity {
             }
 
             h.itemView.setOnClickListener(v -> {
-                // Deselect all, select tapped
                 for (DayItem d : dayItems) d.isSelected = false;
                 item.isSelected = true;
                 notifyDataSetChanged();
@@ -443,14 +420,11 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
-    // ── Google Calendar sync ──────────────────────────────────────────────────
-
     private void onSyncClicked() {
         if (monthEvents.isEmpty()) {
             Toast.makeText(this, "אין אירועים לסנכרון בחודש זה", Toast.LENGTH_SHORT).show();
             return;
         }
-        // Check / request calendar permissions
         if (checkSelfPermission(android.Manifest.permission.WRITE_CALENDAR)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -500,7 +474,7 @@ public class CalendarActivity extends BaseActivity {
         for (CalendarEvent event : monthEvents) {
             try {
                 long startMillis = parseEventMillis(event.getDate(), event.getTime());
-                long endMillis   = startMillis + 3600_000L; // 1-hour default
+                long endMillis   = startMillis + 3600_000L;
 
                 ContentValues cv = new ContentValues();
                 cv.put(CalendarContract.Events.CALENDAR_ID,   calId);
@@ -549,8 +523,6 @@ public class CalendarActivity extends BaseActivity {
             return System.currentTimeMillis();
         }
     }
-
-    // ── Event list adapter ────────────────────────────────────────────────────
 
     private class EventAdapter extends RecyclerView.Adapter<EventAdapter.VH> {
 

@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Shell shared by all bottom-nav screens.
-  Top toolbar: clean white, dark-green "Family App" label.
-  Bottom nav: M3 rounded indicator (colorPrimaryVeryLight) behind selected item.
--->
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,7 +8,6 @@
     android:background="@color/colorBackground"
     tools:context=".BaseActivity">
 
-    <!-- Clean white toolbar — no elevation, no border -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
@@ -22,10 +17,8 @@
         app:elevation="0dp">
 
 
-
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- 1dp divider — very subtle -->
     <View
         android:id="@+id/toolbarDivider"
         android:layout_width="match_parent"
@@ -33,7 +26,6 @@
         android:layout_below="@+id/my_toolbar"
         android:background="@color/colorDivider" />
 
-    <!-- Content frame -->
     <FrameLayout
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
@@ -41,7 +33,6 @@
         android:layout_above="@+id/navDivider"
         android:layout_below="@+id/toolbarDivider" />
 
-    <!-- Hairline above nav -->
     <View
         android:id="@+id/navDivider"
         android:layout_width="match_parent"
@@ -49,11 +40,7 @@
         android:layout_above="@+id/bottom_navigation"
         android:background="@color/colorDivider" />
 
-    <!--
-      M3 BottomNavigationView with rounded indicator.
-      itemActiveIndicatorColor — pill background behind selected icon.
-      The indicator colour is the very light mint tint.
-    -->
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"

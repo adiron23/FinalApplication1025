@@ -17,7 +17,6 @@ public class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
     }
 
-    // הוספת onResume כדי לעדכן את התפריט בכל פעם שהמסך חוזר לקדמת הבמה
     @Override
     protected void onResume() {
         super.onResume();
@@ -36,7 +35,6 @@ public class BaseActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         if (bottomNavigationView != null) {
-            // ביטול אנימציית ה"קפיצה" של האייקונים (Shift Mode)
             bottomNavigationView.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
 
             bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -80,8 +78,6 @@ public class BaseActivity extends AppCompatActivity {
             else if (this instanceof ProfileActivity)  id = R.id.nav_profile;
 
             if (id != -1) {
-                // שימוש ב-setSelectedItemId במקום ב-setChecked(true)
-                // זה מעדכן את המצב הוויזואלי של התפריט בצורה אמינה יותר
                 bottomNavigationView.getMenu().findItem(id).setChecked(true);
             }
         }
