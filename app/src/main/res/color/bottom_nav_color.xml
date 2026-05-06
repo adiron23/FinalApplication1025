@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bottom nav tint:
+  • Selected  → colorIconSelected (#27894C, dark green, 4.8:1 on white)
+  • Resting   → colorIcon (#6A9278, muted green-gray)
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/colorIconSelected" android:state_checked="true" />
+    <item android:color="@color/colorIcon" />
+</selector>

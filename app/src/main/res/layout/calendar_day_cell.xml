@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Calendar day cell.
+  The outer FrameLayout is sized to a square in the adapter.
+  The inner circle background is set programmatically per state.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Circle bg layer — sized to 80% of cell, centered -->
+    <LinearLayout
+        android:id="@+id/dayCircle"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvDay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:gravity="center" />
+
+        <!-- Event dot — 5dp circle, shown when day has events -->
+        <View
+            android:id="@+id/vEventDot"
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/bg_avatar_circle"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</FrameLayout>

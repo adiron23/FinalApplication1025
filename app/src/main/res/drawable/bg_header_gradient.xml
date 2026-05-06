@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hero header background.
+  Gradient: warm brown top → deep espresso bottom.
+  Curved bottom corners give organic separation from cards below.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <gradient
+        android:startColor="#8D6E63"
+        android:centerColor="#7B5E57"
+        android:endColor="#5D4037"
+        android:angle="180"
+        android:type="linear" />
+
+    <corners
+        android:bottomLeftRadius="36dp"
+        android:bottomRightRadius="36dp" />
+
+</shape>

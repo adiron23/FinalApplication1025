@@ -21,14 +21,7 @@
         android:elevation="0dp"
         app:elevation="0dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="Family App"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="19sp"
-            android:textStyle="bold" />
+
 
     </androidx.appcompat.widget.Toolbar>
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Preloads Heebo so it is available before the first screen renders -->
+<preloaded-fonts xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font app:font="@font/heebo" />
+</preloaded-fonts>
