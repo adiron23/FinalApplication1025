@@ -3,9 +3,13 @@ package com.example.finalapplication;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class BaseActivity extends AppCompatActivity {
@@ -37,29 +41,32 @@ public class BaseActivity extends AppCompatActivity {
         if (bottomNavigationView != null) {
             bottomNavigationView.setLabelVisibilityMode(BottomNavigationView.LABEL_VISIBILITY_LABELED);
 
-            bottomNavigationView.setOnItemSelectedListener(item -> {
-                int id = item.getItemId();
-                Intent intent = null;
+            bottomNavigationView.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    int id = item.getItemId();
+                    Intent intent = null;
 
-                if (id == R.id.nav_main && !(this instanceof MainActivity)) {
-                    intent = new Intent(this, MainActivity.class);
-                } else if (id == R.id.nav_shopping_list && !(this instanceof ShoppingListActivity)) {
-                    intent = new Intent(this, ShoppingListActivity.class);
-                } else if (id == R.id.nav_tasks && !(this instanceof TasksActivity)) {
-                    intent = new Intent(this, TasksActivity.class);
-                } else if (id == R.id.nav_calendar && !(this instanceof CalendarActivity)) {
-                    intent = new Intent(this, CalendarActivity.class);
-                } else if (id == R.id.nav_profile && !(this instanceof ProfileActivity)) {
-                    intent = new Intent(this, ProfileActivity.class);
-                }
+                    if (id == R.id.nav_main && !(BaseActivity.this instanceof MainActivity)) {
+                        intent = new Intent(BaseActivity.this, MainActivity.class);
+                    } else if (id == R.id.nav_shopping_list && !(BaseActivity.this instanceof ShoppingListActivity)) {
+                        intent = new Intent(BaseActivity.this, ShoppingListActivity.class);
+                    } else if (id == R.id.nav_tasks && !(BaseActivity.this instanceof TasksActivity)) {
+                        intent = new Intent(BaseActivity.this, TasksActivity.class);
+                    } else if (id == R.id.nav_calendar && !(BaseActivity.this instanceof CalendarActivity)) {
+                        intent = new Intent(BaseActivity.this, CalendarActivity.class);
+                    } else if (id == R.id.nav_profile && !(BaseActivity.this instanceof ProfileActivity)) {
+                        intent = new Intent(BaseActivity.this, ProfileActivity.class);
+                    }
 
-                if (intent != null) {
-                    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                    startActivity(intent);
-                    overridePendingTransition(0, 0);
+                    if (intent != null) {
+                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        BaseActivity.this.startActivity(intent);
+                        BaseActivity.this.overridePendingTransition(0, 0);
+                        return true;
+                    }
                     return true;
                 }
-                return true;
             });
         }
     }

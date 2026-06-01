@@ -1,31 +1,37 @@
 package com.example.finalapplication;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Patterns;
+import android.view.View;
 import android.widget.*;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LogInActivity extends AppCompatActivity {
 
     private static final int RC_GOOGLE_SIGN_IN = 9001;
 
-    private EditText  eTEmail, eTPass;
-    private TextView  tVMsg, tVGoToRegister, tvForgotPassword;
-    private Button    btnLogin;
+    private EditText eTEmail, eTPass;
+    private TextView tVMsg, tVGoToRegister, tvForgotPassword;
+    private Button btnLogin;
     private GoogleSignInClient mGoogleSignInClient;
 
     @Override
@@ -40,20 +46,33 @@ public class LogInActivity extends AppCompatActivity {
         tVGoToRegister   = findViewById(R.id.tVGoToRegister);
         tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
-        btnLogin.setOnClickListener(v -> loginUser());
-
-        tVGoToRegister.setOnClickListener(v -> {
-            startActivity(new Intent(this, RegisterActivity.class));
-            finish();
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogInActivity.this.loginUser();
+            }
         });
 
-        tvForgotPassword.setOnClickListener(v -> showPasswordResetDialog());
+        tVGoToRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LogInActivity.this, RegisterActivity.class));
+                finish();
+            }
+        });
 
-        // Real-time email validation
+        tvForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogInActivity.this.showPasswordResetDialog();
+            }
+        });
+
         eTEmail.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) {
+            @Override
+            public void afterTextChanged(Editable s) {
                 String email = s.toString().trim();
                 if (!email.isEmpty() && !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                     tVMsg.setText("כתובת אימייל לא תקינה");
@@ -63,8 +82,6 @@ public class LogInActivity extends AppCompatActivity {
             }
         });
 
-        // Google Sign-In setup
-        // NOTE: Requires Google Sign-In enabled in Firebase Console + SHA-1 registered
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -73,8 +90,12 @@ public class LogInActivity extends AppCompatActivity {
 
         Button btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn);
         if (btnGoogleSignIn != null) {
-            btnGoogleSignIn.setOnClickListener(v ->
-                    startActivityForResult(mGoogleSignInClient.getSignInIntent(), RC_GOOGLE_SIGN_IN));
+            btnGoogleSignIn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivityForResult(mGoogleSignInClient.getSignInIntent(), RC_GOOGLE_SIGN_IN);
+                }
+            });
         }
     }
 
@@ -96,13 +117,16 @@ public class LogInActivity extends AppCompatActivity {
         pd.show();
 
         FirebaseAuth.getInstance().signInWithEmailAndPassword(email, pass)
-                .addOnCompleteListener(task -> {
-                    pd.dismiss();
-                    if (task.isSuccessful()) {
-                        navigateAfterLogin();
-                    } else {
-                        Exception e = task.getException();
-                        tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        pd.dismiss();
+                        if (task.isSuccessful()) {
+                            LogInActivity.this.navigateAfterLogin();
+                        } else {
+                            Exception e = task.getException();
+                            tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                        }
                     }
                 });
     }
@@ -128,13 +152,16 @@ public class LogInActivity extends AppCompatActivity {
 
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         FirebaseAuth.getInstance().signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    pd.dismiss();
-                    if (task.isSuccessful()) {
-                        navigateAfterLogin();
-                    } else {
-                        Exception e = task.getException();
-                        tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        pd.dismiss();
+                        if (task.isSuccessful()) {
+                            LogInActivity.this.navigateAfterLogin();
+                        } else {
+                            Exception e = task.getException();
+                            tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                        }
                     }
                 });
     }
@@ -152,7 +179,7 @@ public class LogInActivity extends AppCompatActivity {
     private void showPasswordResetDialog() {
         String currentEmail = eTEmail.getText().toString().trim();
 
-        android.widget.EditText etResetEmail = new android.widget.EditText(this);
+        EditText etResetEmail = new EditText(this);
         etResetEmail.setHint("כתובת האימייל שלך");
         etResetEmail.setText(currentEmail);
         etResetEmail.setInputType(android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
@@ -162,21 +189,32 @@ public class LogInActivity extends AppCompatActivity {
                 .setTitle("איפוס סיסמה")
                 .setMessage("הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס.")
                 .setView(etResetEmail)
-                .setPositiveButton("שלח", (d, w) -> {
-                    String email = etResetEmail.getText().toString().trim();
-                    if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                        Toast.makeText(this, "נא להזין אימייל תקין", Toast.LENGTH_SHORT).show();
-                        return;
+                .setPositiveButton("שלח", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        String email = etResetEmail.getText().toString().trim();
+                        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            Toast.makeText(LogInActivity.this, "נא להזין אימייל תקין", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void v) {
+                                        new androidx.appcompat.app.AlertDialog.Builder(LogInActivity.this)
+                                                .setTitle("נשלח!")
+                                                .setMessage("קישור לאיפוס סיסמה נשלח ל:\n" + email)
+                                                .setPositiveButton("אישור", null)
+                                                .show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        tVMsg.setText("שגיאה: " + e.getMessage());
+                                    }
+                                });
                     }
-                    FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                            .addOnSuccessListener(v ->
-                                    new androidx.appcompat.app.AlertDialog.Builder(this)
-                                            .setTitle("נשלח!")
-                                            .setMessage("קישור לאיפוס סיסמה נשלח ל:\n" + email)
-                                            .setPositiveButton("אישור", null)
-                                            .show())
-                            .addOnFailureListener(e ->
-                                    tVMsg.setText("שגיאה: " + e.getMessage()));
                 })
                 .setNegativeButton("ביטול", null)
                 .show();

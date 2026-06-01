@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,40 +13,47 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
-import android.widget.RadioGroup;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.firebase.firestore.QuerySnapshot;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ProfileActivity extends BaseActivity {
 
-    // Preset avatar drawable names (PNG files in res/drawable/)
     private static final String[] AVATAR_NAMES = {
-        "duck", "gorilla", "hen", "sloth",
-        "penguin", "panda", "monkey", "sealion", "koala"
+            "duck", "gorilla", "hen", "sloth",
+            "penguin", "panda", "monkey", "sealion", "koala"
     };
 
     private LinearLayout familyContainer;
@@ -54,24 +62,19 @@ public class ProfileActivity extends BaseActivity {
     private Button       btnInviteMember;
     private FirebaseFirestore db;
 
-    // Cached values
     private String currentUid        = "";
     private String currentUserName   = "";
     private String currentEmail      = "";
     private String currentBirthDate  = "";
     private String userFamilyCode    = "";
-    private String currentImageUri   = "";   // either a content/file URI string or "avatar_<name>"
+    private String currentImageUri   = "";
     private boolean isCurrentUserParent = false;
 
-    // Temp state while edit-profile dialog is open
-    private Uri     pendingImageUri    = null;   // set when gallery or camera result arrives
-    private String  pendingAvatarName  = null;   // set when user picks a preset avatar
+    private Uri     pendingImageUri    = null;
+    private String  pendingAvatarName  = null;
     private ImageView dialogAvatarPreview = null;
-
-    // Camera photo temp file URI
     private Uri cameraPhotoUri = null;
 
-    // Modern ActivityResult launchers (registered in onCreate)
     private ActivityResultLauncher<Uri>      cameraLauncher;
     private ActivityResultLauncher<String[]> galleryLauncher;
 
@@ -82,31 +85,35 @@ public class ProfileActivity extends BaseActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // Camera: TakePicture writes directly to cameraPhotoUri
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.TakePicture(),
-                success -> {
-                    if (Boolean.TRUE.equals(success) && cameraPhotoUri != null) {
-                        pendingImageUri   = cameraPhotoUri;
-                        pendingAvatarName = null;
-                        if (dialogAvatarPreview != null)
-                            dialogAvatarPreview.setImageURI(pendingImageUri);
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean success) {
+                        if (Boolean.TRUE.equals(success) && cameraPhotoUri != null) {
+                            pendingImageUri = cameraPhotoUri;
+                            pendingAvatarName = null;
+                            if (dialogAvatarPreview != null)
+                                dialogAvatarPreview.setImageURI(pendingImageUri);
+                        }
                     }
                 });
 
-        // Gallery: OpenDocument returns a persistable Uri
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
-                uri -> {
-                    if (uri != null) {
-                        try {
-                            getContentResolver().takePersistableUriPermission(
-                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        } catch (Exception ignored) {}
-                        pendingImageUri   = uri;
-                        pendingAvatarName = null;
-                        if (dialogAvatarPreview != null)
-                            dialogAvatarPreview.setImageURI(uri);
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        if (uri != null) {
+                            try {
+                                ProfileActivity.this.getContentResolver().takePersistableUriPermission(
+                                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            } catch (Exception ignored) {}
+                            pendingImageUri = uri;
+                            pendingAvatarName = null;
+                            if (dialogAvatarPreview != null)
+                                dialogAvatarPreview.setImageURI(uri);
+                        }
                     }
                 });
 
@@ -130,53 +137,66 @@ public class ProfileActivity extends BaseActivity {
         btnInviteMember   = findViewById(R.id.btnInviteMember);
 
         Button btnLogout = findViewById(R.id.btnLogout);
-        if (btnLogout != null) btnLogout.setOnClickListener(v -> logoutUser());
+        if (btnLogout != null) btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ProfileActivity.this.logoutUser();
+            }
+        });
 
         Button btnEditProfile = findViewById(R.id.btnEditProfile);
-        if (btnEditProfile != null) btnEditProfile.setOnClickListener(v -> showEditProfileDialog());
-    }
-
-    private void loadUserProfile(String uid) {
-        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
-            if (!doc.exists()) return;
-
-            currentUserName  = doc.getString("name")       != null ? doc.getString("name")      : "";
-            currentEmail     = doc.getString("email")      != null ? doc.getString("email")     : "";
-            currentBirthDate = doc.getString("birthDate")  != null ? doc.getString("birthDate") : "";
-            currentImageUri  = doc.getString("imageUri")   != null ? doc.getString("imageUri")  : "";
-            String role      = doc.getString("role")       != null ? doc.getString("role")      : "";
-            userFamilyCode   = doc.getString("familyCode") != null ? doc.getString("familyCode"): "";
-
-            tvUserName.setText(currentUserName);
-            tvUserEmail.setText(currentEmail);
-            tvUserBirthDate.setText(currentBirthDate.isEmpty() ? "—" : currentBirthDate);
-            tvUserRole.setText(role.isEmpty() ? "—" : role);
-
-            applyAvatarToView(currentImageUri, ivAvatar);
-
-            if (!userFamilyCode.isEmpty()) {
-                isCurrentUserParent = "הורה".equals(role);
-                loadFamilyData(userFamilyCode, uid);
-                if (isCurrentUserParent) {
-                    btnInviteMember.setVisibility(View.VISIBLE);
-                    btnInviteMember.setOnClickListener(v -> showAddMemberChooser());
-                }
+        if (btnEditProfile != null) btnEditProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ProfileActivity.this.showEditProfileDialog();
             }
         });
     }
 
-    /**
-     * Applies a stored image value to an ImageView.
-     * URI strings (content://, file://) are loaded via setImageURI.
-     * Everything else is treated as a drawable resource name (e.g. "duck").
-     */
+    private void loadUserProfile(String uid) {
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot doc) {
+                        if (!doc.exists()) return;
+
+                        currentUserName  = doc.getString("name")       != null ? doc.getString("name")       : "";
+                        currentEmail     = doc.getString("email")      != null ? doc.getString("email")      : "";
+                        currentBirthDate = doc.getString("birthDate")  != null ? doc.getString("birthDate")  : "";
+                        currentImageUri  = doc.getString("imageUri")   != null ? doc.getString("imageUri")   : "";
+                        String role      = doc.getString("role")       != null ? doc.getString("role")       : "";
+                        userFamilyCode   = doc.getString("familyCode") != null ? doc.getString("familyCode") : "";
+
+                        tvUserName.setText(currentUserName);
+                        tvUserEmail.setText(currentEmail);
+                        tvUserBirthDate.setText(currentBirthDate.isEmpty() ? "—" : currentBirthDate);
+                        tvUserRole.setText(role.isEmpty() ? "—" : role);
+
+                        applyAvatarToView(currentImageUri, ivAvatar);
+
+                        if (!userFamilyCode.isEmpty()) {
+                            isCurrentUserParent = "הורה".equals(role);
+                            ProfileActivity.this.loadFamilyData(userFamilyCode, uid);
+                            if (isCurrentUserParent) {
+                                btnInviteMember.setVisibility(View.VISIBLE);
+                                btnInviteMember.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        ProfileActivity.this.showAddMemberChooser();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+    }
+
     private void applyAvatarToView(String value, ImageView target) {
         if (value == null || value.isEmpty()) return;
         if (value.startsWith("content://") || value.startsWith("file://")) {
             try { target.setImageURI(Uri.parse(value)); }
             catch (Exception ignored) {}
         } else {
-            // Preset drawable name
             int resId = getResources().getIdentifier(value, "drawable", getPackageName());
             if (resId != 0) {
                 target.setPadding(0, 0, 0, 0);
@@ -187,26 +207,33 @@ public class ProfileActivity extends BaseActivity {
     }
 
     private void loadFamilyData(String familyCode, String uid) {
-        db.collection("families").document(familyCode).get().addOnSuccessListener(doc -> {
-            if (doc.exists()) {
-                tvFamilyNameTitle.setText("משפחת " + doc.getString("familyName") + ":");
-            }
-        });
+        db.collection("families").document(familyCode).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot doc) {
+                        if (doc.exists()) {
+                            tvFamilyNameTitle.setText("משפחת " + doc.getString("familyName") + ":");
+                        }
+                    }
+                });
 
         db.collection("users").whereEqualTo("familyCode", familyCode).get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (familyContainer == null) return;
-                    familyContainer.removeAllViews();
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot querySnapshot) {
+                        if (familyContainer == null) return;
+                        familyContainer.removeAllViews();
 
-                    List<QueryDocumentSnapshot> parents  = new ArrayList<>();
-                    List<QueryDocumentSnapshot> children = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        if ("הורה".equals(doc.getString("role"))) parents.add(doc);
-                        else children.add(doc);
+                        List<QueryDocumentSnapshot> parents  = new ArrayList<>();
+                        List<QueryDocumentSnapshot> children = new ArrayList<>();
+                        for (QueryDocumentSnapshot doc : querySnapshot) {
+                            if ("הורה".equals(doc.getString("role"))) parents.add(doc);
+                            else children.add(doc);
+                        }
+
+                        for (QueryDocumentSnapshot doc : parents)  ProfileActivity.this.addFamilyCard(doc, uid);
+                        for (QueryDocumentSnapshot doc : children) ProfileActivity.this.addFamilyCard(doc, uid);
                     }
-
-                    for (QueryDocumentSnapshot doc : parents)  addFamilyCard(doc, uid);
-                    for (QueryDocumentSnapshot doc : children) addFamilyCard(doc, uid);
                 });
     }
 
@@ -227,12 +254,10 @@ public class ProfileActivity extends BaseActivity {
         int avatarColor = "הורה".equals(memberRole) ? 0xFF4E342E : 0xFF8D6E63;
 
         if (!memberImage.isEmpty()) {
-            // Show real picture, hide the letter circle
             ivAvatarImage.setVisibility(View.VISIBLE);
             tvAvatarLetter.setVisibility(View.GONE);
             applyAvatarToView(memberImage, ivAvatarImage);
         } else {
-            // Fallback: coloured circle with first letter
             tvAvatarLetter.setText(memberName.isEmpty() ? "?" : String.valueOf(memberName.charAt(0)).toUpperCase());
             tvAvatarLetter.getBackground().setTint(avatarColor);
         }
@@ -242,13 +267,18 @@ public class ProfileActivity extends BaseActivity {
 
         if (isCurrentUserParent && !memberId.equals(currentUserId)) {
             btnRemove.setVisibility(View.VISIBLE);
-            btnRemove.setOnClickListener(v -> confirmRemoveMember(memberId, memberName));
+            final String finalMemberId = memberId;
+            final String finalMemberName = memberName;
+            btnRemove.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ProfileActivity.this.confirmRemoveMember(finalMemberId, finalMemberName);
+                }
+            });
         }
 
         familyContainer.addView(card);
     }
-
-
 
     private void showEditProfileDialog() {
         pendingImageUri   = null;
@@ -268,14 +298,27 @@ public class ProfileActivity extends BaseActivity {
         etEmail.setText(currentEmail);
         applyAvatarToView(currentImageUri, dialogAvatarPreview);
 
-        btnPickImage.setOnClickListener(v -> showImageSourceChooser());
+        btnPickImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ProfileActivity.this.showImageSourceChooser();
+            }
+        });
 
-        etBirth.setOnClickListener(v -> {
-            Calendar cal = Calendar.getInstance();
-            new DatePickerDialog(this,
-                    (dp, year, month, day) -> etBirth.setText(day + "/" + (month + 1) + "/" + year),
-                    cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
-            ).show();
+        etBirth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Calendar cal = Calendar.getInstance();
+                new DatePickerDialog(ProfileActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePicker dp, int year, int month, int day) {
+                                etBirth.setText(day + "/" + (month + 1) + "/" + year);
+                            }
+                        },
+                        cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)
+                ).show();
+            }
         });
 
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -283,40 +326,54 @@ public class ProfileActivity extends BaseActivity {
                 .setView(view)
                 .setPositiveButton("שמור", null)
                 .setNegativeButton("ביטול", null)
-                .setNeutralButton("שלח קישור לאיפוס סיסמה", (d, w) -> sendPasswordResetEmail())
+                .setNeutralButton("שלח קישור לאיפוס סיסמה", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        ProfileActivity.this.sendPasswordResetEmail();
+                    }
+                })
                 .create();
 
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String newName     = etName.getText().toString().trim();
-            String newBirth    = etBirth.getText().toString().trim();
-            String newEmail    = etEmail.getText().toString().trim();
-            String newPassword = etPassword.getText().toString().trim();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface d) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String newName     = etName.getText().toString().trim();
+                        String newBirth    = etBirth.getText().toString().trim();
+                        String newEmail    = etEmail.getText().toString().trim();
+                        String newPassword = etPassword.getText().toString().trim();
 
-            if (newName.isEmpty() || newEmail.isEmpty()) {
-                Toast.makeText(this, "שם ואימייל הם שדות חובה", Toast.LENGTH_SHORT).show();
-                return;
+                        if (newName.isEmpty() || newEmail.isEmpty()) {
+                            Toast.makeText(ProfileActivity.this, "שם ואימייל הם שדות חובה", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        if (!newPassword.isEmpty() && newPassword.length() < 6) {
+                            Toast.makeText(ProfileActivity.this, "הסיסמה חייבת להכיל לפחות 6 תווים", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        ProfileActivity.this.saveProfileChanges(newName, newBirth, newEmail, newPassword);
+                        dialog.dismiss();
+                    }
+                });
             }
-            if (!newPassword.isEmpty() && newPassword.length() < 6) {
-                Toast.makeText(this, "הסיסמה חייבת להכיל לפחות 6 תווים", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            saveProfileChanges(newName, newBirth, newEmail, newPassword);
-            dialog.dismiss();
-        }));
+        });
 
         dialog.show();
     }
-
-
 
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "אווטאר מוכן"};
         new AlertDialog.Builder(this)
                 .setTitle("בחר תמונת פרופיל")
-                .setItems(options, (d, which) -> {
-                    if (which == 0) launchCamera();
-                    else if (which == 1) launchGallery();
-                    else showAvatarPicker();
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        if (which == 0) ProfileActivity.this.launchCamera();
+                        else if (which == 1) ProfileActivity.this.launchGallery();
+                        else ProfileActivity.this.showAvatarPicker();
+                    }
                 })
                 .show();
     }
@@ -338,7 +395,6 @@ public class ProfileActivity extends BaseActivity {
         galleryLauncher.launch(new String[]{"image/*"});
     }
 
-    /** Shows a horizontal-scroll grid of preset avatars in an AlertDialog. */
     private void showAvatarPicker() {
         HorizontalScrollView scrollView = new HorizontalScrollView(this);
         scrollView.setPadding(16, 24, 16, 16);
@@ -347,7 +403,7 @@ public class ProfileActivity extends BaseActivity {
         row.setOrientation(LinearLayout.HORIZONTAL);
         scrollView.addView(row);
 
-        int sizePx = (int) (getResources().getDisplayMetrics().density * 80);
+        int sizePx   = (int) (getResources().getDisplayMetrics().density * 80);
         int marginPx = (int) (getResources().getDisplayMetrics().density * 8);
 
         AlertDialog[] dialogHolder = new AlertDialog[1];
@@ -370,12 +426,16 @@ public class ProfileActivity extends BaseActivity {
             img.setScaleType(ImageView.ScaleType.FIT_CENTER);
             cell.addView(img);
 
-            final String name = avatarName;
-            cell.setOnClickListener(v -> {
-                pendingAvatarName = name;
-                pendingImageUri   = null;
-                if (dialogAvatarPreview != null) dialogAvatarPreview.setImageResource(resId);
-                if (dialogHolder[0] != null) dialogHolder[0].dismiss();
+            final String name   = avatarName;
+            final int    resId2 = resId;
+            cell.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    pendingAvatarName = name;
+                    pendingImageUri   = null;
+                    if (dialogAvatarPreview != null) dialogAvatarPreview.setImageResource(resId2);
+                    if (dialogHolder[0] != null) dialogHolder[0].dismiss();
+                }
             });
 
             row.addView(cell);
@@ -392,66 +452,84 @@ public class ProfileActivity extends BaseActivity {
     private void saveProfileChanges(String newName, String newBirth, String newEmail, String newPassword) {
         boolean nameChanged = !newName.equals(currentUserName);
 
-        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        Map<String, Object> updates = new HashMap<>();
         updates.put("name",      newName);
         updates.put("birthDate", newBirth);
         updates.put("email",     newEmail);
 
         if (pendingAvatarName != null) {
-            // Preset avatar — store the drawable name
             updates.put("imageUri", pendingAvatarName);
         } else if (pendingImageUri != null) {
-            // Camera or gallery URI
             updates.put("imageUri", pendingImageUri.toString());
         }
 
+        final String oldName = currentUserName;
+
         db.collection("users").document(currentUid).update(updates)
-                .addOnSuccessListener(v -> {
-                    if (nameChanged && !userFamilyCode.isEmpty()) {
-                        propagateNameChange(currentUserName, newName);
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void v) {
+                        if (nameChanged && !userFamilyCode.isEmpty()) {
+                            ProfileActivity.this.propagateNameChange(oldName, newName);
+                        }
+
+                        currentUserName  = newName;
+                        currentEmail     = newEmail;
+                        currentBirthDate = newBirth;
+                        tvUserName.setText(newName);
+                        tvUserEmail.setText(newEmail);
+                        tvUserBirthDate.setText(newBirth.isEmpty() ? "—" : newBirth);
+
+                        if (pendingAvatarName != null) {
+                            currentImageUri = pendingAvatarName;
+                            applyAvatarToView(pendingAvatarName, ivAvatar);
+                            pendingAvatarName = null;
+                        } else if (pendingImageUri != null) {
+                            currentImageUri = pendingImageUri.toString();
+                            ivAvatar.setPadding(0, 0, 0, 0);
+                            ivAvatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            ivAvatar.setImageURI(pendingImageUri);
+                            pendingImageUri = null;
+                        }
+
+                        if (!userFamilyCode.isEmpty()) ProfileActivity.this.loadFamilyData(userFamilyCode, currentUid);
+                        Toast.makeText(ProfileActivity.this, "הפרופיל עודכן בהצלחה", Toast.LENGTH_SHORT).show();
                     }
-
-                    currentUserName  = newName;
-                    currentEmail     = newEmail;
-                    currentBirthDate = newBirth;
-                    tvUserName.setText(newName);
-                    tvUserEmail.setText(newEmail);
-                    tvUserBirthDate.setText(newBirth.isEmpty() ? "—" : newBirth);
-
-                    if (pendingAvatarName != null) {
-                        currentImageUri = pendingAvatarName;
-                        applyAvatarToView(pendingAvatarName, ivAvatar);
-                        pendingAvatarName = null;
-                    } else if (pendingImageUri != null) {
-                        currentImageUri = pendingImageUri.toString();
-                        ivAvatar.setPadding(0, 0, 0, 0);
-                        ivAvatar.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        ivAvatar.setImageURI(pendingImageUri);
-                        pendingImageUri = null;
-                    }
-
-                    if (!userFamilyCode.isEmpty()) loadFamilyData(userFamilyCode, currentUid);
-                    Toast.makeText(this, "הפרופיל עודכן בהצלחה", Toast.LENGTH_SHORT).show();
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "שגיאה בעדכון: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(ProfileActivity.this, "שגיאה בעדכון: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null && !newEmail.equals(currentEmail)) {
             firebaseUser.updateEmail(newEmail)
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "שגיאה בעדכון אימייל: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(ProfileActivity.this, "שגיאה בעדכון אימייל: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
         }
 
         if (!newPassword.isEmpty() && firebaseUser != null) {
             firebaseUser.updatePassword(newPassword)
-                    .addOnSuccessListener(v -> Toast.makeText(this, "הסיסמה עודכנה", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e ->
-                            Toast.makeText(this, "שגיאה בעדכון סיסמה: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void v) {
+                            Toast.makeText(ProfileActivity.this, "הסיסמה עודכנה", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Toast.makeText(ProfileActivity.this, "שגיאה בעדכון סיסמה: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
         }
     }
-
-
 
     private void sendPasswordResetEmail() {
         if (currentEmail.isEmpty()) {
@@ -460,44 +538,59 @@ public class ProfileActivity extends BaseActivity {
         }
         FirebaseAuth.getInstance()
                 .sendPasswordResetEmail(currentEmail)
-                .addOnSuccessListener(v ->
-                        new AlertDialog.Builder(this)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void v) {
+                        new AlertDialog.Builder(ProfileActivity.this)
                                 .setTitle("קישור נשלח")
                                 .setMessage("קישור לאיפוס סיסמה נשלח לכתובת:\n" + currentEmail)
                                 .setPositiveButton("אישור", null)
-                                .show())
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "שגיאה: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                .show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(ProfileActivity.this, "שגיאה: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
     }
-
-
 
     private void propagateNameChange(String oldName, String newName) {
         db.collection("tasks")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("assignedToUid", currentUid)
                 .get()
-                .addOnSuccessListener(snap -> {
-                    for (QueryDocumentSnapshot doc : snap)
-                        doc.getReference().update("assignedToName", newName);
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snap) {
+                        for (QueryDocumentSnapshot doc : snap)
+                            doc.getReference().update("assignedToName", newName);
+                    }
                 });
 
         db.collection("shopping_lists")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("assignedToUid", currentUid)
                 .get()
-                .addOnSuccessListener(snap -> {
-                    for (QueryDocumentSnapshot doc : snap)
-                        doc.getReference().update("assignedToName", newName);
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snap) {
+                        for (QueryDocumentSnapshot doc : snap)
+                            doc.getReference().update("assignedToName", newName);
+                    }
                 });
 
         db.collection("shopping_lists")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("createdBy", oldName)
                 .get()
-                .addOnSuccessListener(snap -> {
-                    for (QueryDocumentSnapshot doc : snap)
-                        doc.getReference().update("createdBy", newName);
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snap) {
+                        for (QueryDocumentSnapshot doc : snap)
+                            doc.getReference().update("createdBy", newName);
+                    }
                 });
     }
 
@@ -505,9 +598,12 @@ public class ProfileActivity extends BaseActivity {
         String[] options = {"שלח הזמנה (קישור / קוד)", "צור חשבון חדש עבורם"};
         new AlertDialog.Builder(this)
                 .setTitle("הוסף חבר משפחה")
-                .setItems(options, (d, which) -> {
-                    if (which == 0) showInviteDialog(userFamilyCode);
-                    else            showCreateMemberDialog();
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        if (which == 0) ProfileActivity.this.showInviteDialog(userFamilyCode);
+                        else            ProfileActivity.this.showCreateMemberDialog();
+                    }
                 })
                 .setNegativeButton("ביטול", null)
                 .show();
@@ -527,36 +623,43 @@ public class ProfileActivity extends BaseActivity {
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("יצירת חשבון חבר משפחה")
                 .setView(view)
-                .setPositiveButton("צור חשבון", null)   // set below to prevent auto-dismiss
+                .setPositiveButton("צור חשבון", null)
                 .setNegativeButton("ביטול", null)
                 .create();
 
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String name     = etName.getText()     != null ? etName.getText().toString().trim()     : "";
-            String email    = etEmail.getText()    != null ? etEmail.getText().toString().trim()    : "";
-            String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
-            String role     = rgRole.getCheckedRadioButtonId() == R.id.rbParent ? "הורה" : "ילד/ה";
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface d) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String name     = etName.getText()     != null ? etName.getText().toString().trim()     : "";
+                        String email    = etEmail.getText()    != null ? etEmail.getText().toString().trim()    : "";
+                        String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
+                        String role     = rgRole.getCheckedRadioButtonId() == R.id.rbParent ? "הורה" : "ילד/ה";
 
-            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "יש למלא את כל השדות", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (password.length() < 6) {
-                Toast.makeText(this, "הסיסמה חייבת להכיל לפחות 6 תווים", Toast.LENGTH_SHORT).show();
-                return;
-            }
+                        if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                            Toast.makeText(ProfileActivity.this, "יש למלא את כל השדות", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        if (password.length() < 6) {
+                            Toast.makeText(ProfileActivity.this, "הסיסמה חייבת להכיל לפחות 6 תווים", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-            createFamilyMemberAccount(name, email, password, role, dialog);
-        }));
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                        ProfileActivity.this.createFamilyMemberAccount(name, email, password, role, dialog);
+                    }
+                });
+            }
+        });
 
         dialog.show();
     }
 
     private void createFamilyMemberAccount(String name, String email,
-                                            String password, String role,
-                                            AlertDialog dialog) {
-        // Use a secondary FirebaseApp so the parent's auth session is not replaced
+                                           String password, String role,
+                                           AlertDialog dialog) {
         FirebaseApp secondaryApp;
         try {
             secondaryApp = FirebaseApp.getInstance("member_creation");
@@ -567,38 +670,50 @@ public class ProfileActivity extends BaseActivity {
 
         FirebaseAuth secondaryAuth = FirebaseAuth.getInstance(secondaryApp);
         secondaryAuth.createUserWithEmailAndPassword(email, password)
-                .addOnSuccessListener(result -> {
-                    String newUid = result.getUser().getUid();
-                    secondaryAuth.signOut();   // sign out of secondary immediately
+                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    @Override
+                    public void onSuccess(AuthResult result) {
+                        String newUid = result.getUser().getUid();
+                        secondaryAuth.signOut();
 
-                    Map<String, Object> userData = new HashMap<>();
-                    userData.put("name",       name);
-                    userData.put("email",      email);
-                    userData.put("role",       role);
-                    userData.put("familyCode", userFamilyCode);
-                    userData.put("birthDate",  "");
-                    userData.put("imageUri",   "");
+                        Map<String, Object> userData = new HashMap<>();
+                        userData.put("name",       name);
+                        userData.put("email",      email);
+                        userData.put("role",       role);
+                        userData.put("familyCode", userFamilyCode);
+                        userData.put("birthDate",  "");
+                        userData.put("imageUri",   "");
 
-                    db.collection("users").document(newUid).set(userData)
-                            .addOnSuccessListener(v -> {
-                                dialog.dismiss();
-                                loadFamilyData(userFamilyCode, currentUid);
-                                Toast.makeText(this,
-                                        "החשבון עבור " + name + " נוצר בהצלחה",
-                                        Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                                Toast.makeText(this,
-                                        "שגיאה בשמירת הנתונים: " + e.getMessage(),
-                                        Toast.LENGTH_LONG).show();
-                            });
+                        db.collection("users").document(newUid).set(userData)
+                                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void v) {
+                                        dialog.dismiss();
+                                        ProfileActivity.this.loadFamilyData(userFamilyCode, currentUid);
+                                        Toast.makeText(ProfileActivity.this,
+                                                "החשבון עבור " + name + " נוצר בהצלחה",
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                                        Toast.makeText(ProfileActivity.this,
+                                                "שגיאה בשמירת הנתונים: " + e.getMessage(),
+                                                Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                    Toast.makeText(this,
-                            "שגיאה ביצירת החשבון: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        Toast.makeText(ProfileActivity.this,
+                                "שגיאה ביצירת החשבון: " + e.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    }
                 });
     }
 
@@ -608,29 +723,38 @@ public class ProfileActivity extends BaseActivity {
         new AlertDialog.Builder(this)
                 .setTitle("הוסף חבר משפחה")
                 .setMessage("שתף את הקישור הבא:\n\n" + link + "\n\nקוד ידני: " + familyCode)
-                .setPositiveButton("שתף קישור", (d, w) -> {
-                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                    shareIntent.setType("text/plain");
-                    shareIntent.putExtra(Intent.EXTRA_TEXT,
-                            "הצטרף למשפחה שלנו באפליקציה! לחץ על הקישור: " + link);
-                    startActivity(Intent.createChooser(shareIntent, "שתף קישור הצטרפות"));
+                .setPositiveButton("שתף קישור", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                                "הצטרף למשפחה שלנו באפליקציה! לחץ על הקישור: " + link);
+                        startActivity(Intent.createChooser(shareIntent, "שתף קישור הצטרפות"));
+                    }
                 })
-                .setNeutralButton("העתק קישור", (d, w) -> {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setPrimaryClip(ClipData.newPlainText("family_link", link));
-                    Toast.makeText(this, "הקישור הועתק", Toast.LENGTH_SHORT).show();
+                .setNeutralButton("העתק קישור", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        clipboard.setPrimaryClip(ClipData.newPlainText("family_link", link));
+                        Toast.makeText(ProfileActivity.this, "הקישור הועתק", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("סגור", null)
                 .show();
     }
 
-
-
     private void confirmRemoveMember(String memberId, String memberName) {
         new AlertDialog.Builder(this)
                 .setTitle("הסרת חבר משפחה")
                 .setMessage("להסיר את " + memberName + " מהמשפחה?")
-                .setPositiveButton("הסר", (d, w) -> removeMember(memberId))
+                .setPositiveButton("הסר", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        ProfileActivity.this.removeMember(memberId);
+                    }
+                })
                 .setNegativeButton("ביטול", null)
                 .show();
     }
@@ -638,11 +762,18 @@ public class ProfileActivity extends BaseActivity {
     private void removeMember(String memberId) {
         db.collection("users").document(memberId)
                 .update("familyCode", "", "role", "")
-                .addOnSuccessListener(v -> {
-                    Toast.makeText(this, "החבר הוסר מהמשפחה", Toast.LENGTH_SHORT).show();
-                    loadFamilyData(userFamilyCode, currentUid);
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void v) {
+                        Toast.makeText(ProfileActivity.this, "החבר הוסר מהמשפחה", Toast.LENGTH_SHORT).show();
+                        ProfileActivity.this.loadFamilyData(userFamilyCode, currentUid);
+                    }
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "שגיאה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(ProfileActivity.this, "שגיאה: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

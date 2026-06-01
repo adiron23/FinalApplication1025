@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -12,9 +13,14 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        new Handler().postDelayed(() -> {
-            startActivity(new Intent(SplashActivity.this, MainActivity.class));
-            finish();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                boolean loggedIn = FirebaseAuth.getInstance().getCurrentUser() != null;
+                Class<?> dest = loggedIn ? MainActivity.class : LogInActivity.class;
+                SplashActivity.this.startActivity(new Intent(SplashActivity.this, dest));
+                SplashActivity.this.finish();
+            }
         }, 2500);
     }
 }

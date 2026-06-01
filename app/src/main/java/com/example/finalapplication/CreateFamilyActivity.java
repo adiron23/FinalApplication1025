@@ -3,17 +3,21 @@ package com.example.finalapplication;
 import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,24 +47,27 @@ public class CreateFamilyActivity extends AppCompatActivity {
         eTParent1 = findViewById(R.id.eTParent1);
         eTParent2 = findViewById(R.id.eTParent2);
 
-        findViewById(R.id.btnAddChild).setOnClickListener(v -> addChildField());
-        findViewById(R.id.btnFinishCreate).setOnClickListener(v -> saveFamily());
+        findViewById(R.id.btnAddChild).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CreateFamilyActivity.this.addChildField();
+            }
+        });
+        findViewById(R.id.btnFinishCreate).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CreateFamilyActivity.this.saveFamily();
+            }
+        });
 
         addChildField();
     }
 
     private void addChildField() {
-        // 1. "ניפוח" (Inflation) - הפיכת קובץ ה-XML לאובייקט Java חי
         TextInputLayout childLayout = (TextInputLayout) getLayoutInflater()
                 .inflate(R.layout.item_child_field, childrenFieldsContainer, false);
-
-        // 2. שליפת תיבת הטקסט הפנימית (ה-EditText) כדי שנוכל לקרוא את השם אחר כך
         EditText editText = childLayout.getEditText();
-
-        // 3. הוספת השדה המעוצב לתוך ה-LinearLayout הראשי במסך
         childrenFieldsContainer.addView(childLayout);
-
-        // 4. שמירת ה-EditText ברשימה (List) כדי שנוכל לעבור עליה בלחיצה על "סיום"
         if (editText != null) childrenEdits.add(editText);
     }
 
@@ -90,32 +97,59 @@ public class CreateFamilyActivity extends AppCompatActivity {
         familyData.put("familyCode", code);
         familyData.put("availableRoles", roles);
 
+        final String finalCode = code;
+        final List<String> finalRoles = roles;
+
         db.collection("families").document(code).set(familyData)
-                .addOnSuccessListener(aVoid -> identifyAndSetUserRole(code, roles))
-                .addOnFailureListener(e -> Toast.makeText(this, "שגיאה ביצירת משפחה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        CreateFamilyActivity.this.identifyAndSetUserRole(finalCode, finalRoles);
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(CreateFamilyActivity.this, "שגיאה ביצירת משפחה: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void identifyAndSetUserRole(String code, List<String> roles) {
-        db.collection("users").document(uid).get().addOnSuccessListener(doc -> {
-            String myName = doc.getString("name");
-            String myRole = "בן משפחה";
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot doc) {
+                        String myName = doc.getString("name");
+                        String myRole = "בן משפחה";
 
-            if (myName != null) {
-                for (String roleEntry : roles) {
-                    String[] parts = roleEntry.split(":");
-                    if (parts.length >= 2 && parts[0].equalsIgnoreCase(myName)) {
-                        myRole = parts[1];
-                        break;
+                        if (myName != null) {
+                            for (String roleEntry : roles) {
+                                String[] parts = roleEntry.split(":");
+                                if (parts.length >= 2 && parts[0].equalsIgnoreCase(myName)) {
+                                    myRole = parts[1];
+                                    break;
+                                }
+                            }
+                        }
+
+                        final String finalRole = myRole;
+                        db.collection("users").document(uid).update(
+                                "familyCode", code,
+                                "role", finalRole
+                        ).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void v) {
+                                CreateFamilyActivity.this.showShareDialog(code);
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(CreateFamilyActivity.this, "שגיאה בשמירת תפקיד: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     }
-                }
-            }
-
-            db.collection("users").document(uid).update(
-                    "familyCode", code,
-                    "role", myRole
-            ).addOnSuccessListener(v -> showShareDialog(code))
-             .addOnFailureListener(e -> Toast.makeText(this, "שגיאה בשמירת תפקיד: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-        });
+                });
     }
 
     private void showShareDialog(String code) {
@@ -125,26 +159,35 @@ public class CreateFamilyActivity extends AppCompatActivity {
                 .setTitle("המשפחה נוצרה!")
                 .setMessage("שתף את הקישור הבא עם בני המשפחה כדי שיצטרפו:\n\n" + link + "\n\nקוד ידני: " + code)
                 .setCancelable(false)
-                .setPositiveButton("שתף קישור", (d, w) -> {
-                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                    shareIntent.setType("text/plain");
-                    shareIntent.putExtra(Intent.EXTRA_TEXT,
-                            "הצטרף למשפחה שלנו באפליקציה! לחץ על הקישור: " + link);
-                    startActivity(Intent.createChooser(shareIntent, "שתף קישור הצטרפות"));
-                    // continue to MainActivity after sharing
-                    startActivity(new Intent(this, MainActivity.class));
-                    finish();
+                .setPositiveButton("שתף קישור", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                                "הצטרף למשפחה שלנו באפליקציה! לחץ על הקישור: " + link);
+                        startActivity(Intent.createChooser(shareIntent, "שתף קישור הצטרפות"));
+                        startActivity(new Intent(CreateFamilyActivity.this, MainActivity.class));
+                        finish();
+                    }
                 })
-                .setNeutralButton("העתק קישור", (d, w) -> {
-                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setPrimaryClip(ClipData.newPlainText("family_link", link));
-                    Toast.makeText(this, "הקישור הועתק", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(this, MainActivity.class));
-                    finish();
+                .setNeutralButton("העתק קישור", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                        clipboard.setPrimaryClip(ClipData.newPlainText("family_link", link));
+                        Toast.makeText(CreateFamilyActivity.this, "הקישור הועתק", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(CreateFamilyActivity.this, MainActivity.class));
+                        finish();
+                    }
                 })
-                .setNegativeButton("המשך בלי לשתף", (d, w) -> {
-                    startActivity(new Intent(this, MainActivity.class));
-                    finish();
-                }).show();
+                .setNegativeButton("המשך בלי לשתף", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        startActivity(new Intent(CreateFamilyActivity.this, MainActivity.class));
+                        finish();
+                    }
+                })
+                .show();
     }
 }

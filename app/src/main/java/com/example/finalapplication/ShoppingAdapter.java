@@ -70,18 +70,24 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
         holder.checkBox.setOnCheckedChangeListener(null);
         holder.checkBox.setChecked(item.isChecked());
 
-        holder.checkBox.setOnClickListener(v -> {
-            boolean newChecked = holder.checkBox.isChecked();
-            item.setChecked(newChecked);
-            if (listener != null) listener.onCheckedChanged(item, newChecked);
+        holder.checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean newChecked = holder.checkBox.isChecked();
+                item.setChecked(newChecked);
+                if (listener != null) listener.onCheckedChanged(item, newChecked);
+            }
         });
 
         // Long press to delete — parents only
-        holder.itemView.setOnLongClickListener(v -> {
-            if (isParent && listener != null) {
-                listener.onDeleteRequested(item);
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (isParent && listener != null) {
+                    listener.onDeleteRequested(item);
+                }
+                return true;
             }
-            return true;
         });
     }
 

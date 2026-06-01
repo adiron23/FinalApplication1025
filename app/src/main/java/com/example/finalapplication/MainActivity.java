@@ -9,15 +9,19 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -52,12 +56,24 @@ public class MainActivity extends BaseActivity {
         eventsWidgetContainer   = findViewById(R.id.eventsWidgetContainer);
         tvEventsEmpty           = findViewById(R.id.tvEventsEmpty);
 
-        findViewById(R.id.tvTasksSeeAll).setOnClickListener(v ->
-                startActivity(new Intent(this, TasksActivity.class)));
-        findViewById(R.id.tvShoppingSeeAll).setOnClickListener(v ->
-                startActivity(new Intent(this, ShoppingListActivity.class)));
-        findViewById(R.id.tvEventsSeeAll).setOnClickListener(v ->
-                startActivity(new Intent(this, CalendarActivity.class)));
+        findViewById(R.id.tvTasksSeeAll).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, TasksActivity.class));
+            }
+        });
+        findViewById(R.id.tvShoppingSeeAll).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, ShoppingListActivity.class));
+            }
+        });
+        findViewById(R.id.tvEventsSeeAll).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, CalendarActivity.class));
+            }
+        });
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
@@ -80,7 +96,6 @@ public class MainActivity extends BaseActivity {
         }
     }
 
-    // Returns a time-based greeting in Hebrew
     private String getTimeGreeting() {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         if (hour >= 5 && hour < 12)  return "בוקר טוב";
@@ -90,84 +105,96 @@ public class MainActivity extends BaseActivity {
     }
 
     private void loadInfo() {
-        db.collection("users").document(uid).get().addOnSuccessListener(userDoc -> {
-            if (!userDoc.exists()) return;
+        db.collection("users").document(uid).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot userDoc) {
+                        if (!userDoc.exists()) return;
 
-            String name = userDoc.getString("name");
-            String code = userDoc.getString("familyCode");
-            String role = userDoc.getString("role");
+                        String name = userDoc.getString("name");
+                        String code = userDoc.getString("familyCode");
+                        String role = userDoc.getString("role");
 
-            isParent = "הורה".equals(role);
-            tvTasksWidgetTitle.setText(isParent ? "המשימות הדחופות" : "המשימות שלי");
+                        isParent = "הורה".equals(role);
+                        tvTasksWidgetTitle.setText(isParent ? "המשימות הדחופות" : "המשימות שלי");
 
-            String greeting = getTimeGreeting();
+                        String greeting = MainActivity.this.getTimeGreeting();
 
-            if (code != null && !code.isEmpty()) {
-                userFamilyCode = code;
-                db.collection("families").document(code).get().addOnSuccessListener(famDoc -> {
-                    if (famDoc.exists()) {
-                        String famName = famDoc.getString("familyName");
-                        tVWelcome.setText(greeting + ", " + (name != null ? name : ""));
-                        if (famName != null && !famName.isEmpty()) {
-                            tvFamilyName.setText("משפחת " + famName);
-                            tvFamilyName.setVisibility(android.view.View.VISIBLE);
+                        if (code != null && !code.isEmpty()) {
+                            userFamilyCode = code;
+                            db.collection("families").document(code).get()
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onSuccess(DocumentSnapshot famDoc) {
+                                            if (famDoc.exists()) {
+                                                String famName = famDoc.getString("familyName");
+                                                tVWelcome.setText(greeting + ", " + (name != null ? name : ""));
+                                                if (famName != null && !famName.isEmpty()) {
+                                                    tvFamilyName.setText("משפחת " + famName);
+                                                    tvFamilyName.setVisibility(View.VISIBLE);
+                                                }
+                                            }
+                                        }
+                                    });
+                            MainActivity.this.loadTasksWidget();
+                            MainActivity.this.loadShoppingWidget();
+                            MainActivity.this.loadTodayEventsWidget();
+                        } else {
+                            tVWelcome.setText(greeting + ", " + (name != null ? name : ""));
+                            tvFamilyName.setVisibility(View.GONE);
                         }
                     }
                 });
-                loadTasksWidget();
-                loadShoppingWidget();
-                loadTodayEventsWidget();
-            } else {
-                tVWelcome.setText(greeting + ", " + (name != null ? name : ""));
-                tvFamilyName.setVisibility(android.view.View.GONE);
-            }
-        });
     }
 
     private void loadTasksWidget() {
         Query query = isParent
                 ? db.collection("tasks").whereEqualTo("familyCode", userFamilyCode)
                 : db.collection("tasks").whereEqualTo("familyCode", userFamilyCode)
-                                        .whereEqualTo("assignedToUid", uid);
+                .whereEqualTo("assignedToUid", uid);
 
-        query.get().addOnSuccessListener(querySnapshot -> {
-            List<Task> tasks = new ArrayList<>();
-            for (QueryDocumentSnapshot doc : querySnapshot) {
-                Task task = doc.toObject(Task.class);
-                task.setTaskId(doc.getId());
-                if (!task.isDone()) tasks.add(task);
-            }
+        query.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+            @Override
+            public void onSuccess(QuerySnapshot querySnapshot) {
+                List<Task> tasks = new ArrayList<>();
+                for (QueryDocumentSnapshot doc : querySnapshot) {
+                    Task task = doc.toObject(Task.class);
+                    task.setTaskId(doc.getId());
+                    if (!task.isDone()) tasks.add(task);
+                }
 
-            // Sort ascending by date — most urgent first
-            tasks.sort((a, b) -> {
-                try {
-                    Date da  = a.getDateTime() != null ? sdf.parse(a.getDateTime()) : null;
-                    Date taskDateB = b.getDateTime() != null ? sdf.parse(b.getDateTime()) : null;
-                    if (da == null) return 1;
-                    if (taskDateB == null) return -1;
-                    return da.compareTo(taskDateB);
-                } catch (Exception e) { return 0; }
-            });
+                tasks.sort(new Comparator<Task>() {
+                    @Override
+                    public int compare(Task a, Task b) {
+                        try {
+                            Date da = a.getDateTime() != null ? sdf.parse(a.getDateTime()) : null;
+                            Date db2 = b.getDateTime() != null ? sdf.parse(b.getDateTime()) : null;
+                            if (da == null) return 1;
+                            if (db2 == null) return -1;
+                            return da.compareTo(db2);
+                        } catch (Exception e) { return 0; }
+                    }
+                });
 
-            // Update task count badge
-            int count = tasks.size();
-            if (count > 0) {
-                tvTasksCount.setVisibility(View.VISIBLE);
-                tvTasksCount.setText(String.valueOf(count));
-            } else {
-                tvTasksCount.setVisibility(View.GONE);
-            }
+                int count = tasks.size();
+                if (count > 0) {
+                    tvTasksCount.setVisibility(View.VISIBLE);
+                    tvTasksCount.setText(String.valueOf(count));
+                } else {
+                    tvTasksCount.setVisibility(View.GONE);
+                }
 
-            tasksWidgetContainer.removeAllViews();
-            if (tasks.isEmpty()) {
-                tvTasksEmpty.setVisibility(View.VISIBLE);
-                tvTasksEmpty.setText("כל המשימות הושלמו!");
-                tvTasksEmpty.setTextColor(Color.parseColor("#43A047"));
-            } else {
-                tvTasksEmpty.setVisibility(View.GONE);
-                int show = Math.min(3, tasks.size());
-                for (int i = 0; i < show; i++) {
-                    addTaskRow(tasks.get(i), i < show - 1);
+                tasksWidgetContainer.removeAllViews();
+                if (tasks.isEmpty()) {
+                    tvTasksEmpty.setVisibility(View.VISIBLE);
+                    tvTasksEmpty.setText("כל המשימות הושלמו!");
+                    tvTasksEmpty.setTextColor(Color.parseColor("#43A047"));
+                } else {
+                    tvTasksEmpty.setVisibility(View.GONE);
+                    int show = Math.min(3, tasks.size());
+                    for (int i = 0; i < show; i++) {
+                        MainActivity.this.addTaskRow(tasks.get(i), i < show - 1);
+                    }
                 }
             }
         });
@@ -178,23 +205,19 @@ public class MainActivity extends BaseActivity {
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(4, 10, 4, 10);
 
-        // Task name
         TextView tvName = new TextView(this);
         tvName.setText(task.getTaskName());
         tvName.setTextSize(18);
         tvName.setTypeface(null, Typeface.BOLD);
 
-        // Colour name red if overdue
         boolean overdue = false;
         try {
             Date taskDate = task.getDateTime() != null ? sdf.parse(task.getDateTime()) : null;
             overdue = taskDate != null && taskDate.before(new Date());
         } catch (Exception ignored) {}
         tvName.setTextColor(overdue ? Color.parseColor("#C62828") : Color.parseColor("#3E2723"));
-
         row.addView(tvName);
 
-        // Priority tag (if not "רגיל")
         if (task.getPriority() != null && "דחוף".equals(task.getPriority())) {
             TextView tvPriority = new TextView(this);
             tvPriority.setText("דחוף");
@@ -205,7 +228,6 @@ public class MainActivity extends BaseActivity {
             row.addView(tvPriority);
         }
 
-        // Detail line: assignee (parents) + date
         TextView tvDetail = new TextView(this);
         StringBuilder detail = new StringBuilder();
         if (isParent && task.getAssignedToName() != null && !task.getAssignedToName().isEmpty()) {
@@ -232,7 +254,7 @@ public class MainActivity extends BaseActivity {
 
     private void loadTodayEventsWidget() {
         Calendar c = Calendar.getInstance();
-        String today = String.format(java.util.Locale.US, "%04d-%02d-%02d",
+        String today = String.format(Locale.US, "%04d-%02d-%02d",
                 c.get(Calendar.YEAR),
                 c.get(Calendar.MONTH) + 1,
                 c.get(Calendar.DAY_OF_MONTH));
@@ -241,32 +263,39 @@ public class MainActivity extends BaseActivity {
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("date", today)
                 .get()
-                .addOnSuccessListener(snap -> {
-                    eventsWidgetContainer.removeAllViews();
-                    if (snap.isEmpty()) {
-                        tvEventsEmpty.setVisibility(View.VISIBLE);
-                        return;
-                    }
-                    tvEventsEmpty.setVisibility(View.GONE);
-                    // Sort by timestamp
-                    List<com.google.firebase.firestore.DocumentSnapshot> docs =
-                            new ArrayList<>(snap.getDocuments());
-                    docs.sort((a, b) -> {
-                        Long ta = a.getLong("timestamp");
-                        Long tb = b.getLong("timestamp");
-                        if (ta == null) return 1;
-                        if (tb == null) return -1;
-                        return Long.compare(ta, tb);
-                    });
-                    int showCount = Math.min(3, docs.size());
-                    for (int i = 0; i < showCount; i++) {
-                        String title  = docs.get(i).getString("title");
-                        String author = docs.get(i).getString("authorName");
-                        String time   = docs.get(i).getString("time");
-                        addEventRow(title  != null ? title  : "",
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snap) {
+                        eventsWidgetContainer.removeAllViews();
+                        if (snap.isEmpty()) {
+                            tvEventsEmpty.setVisibility(View.VISIBLE);
+                            return;
+                        }
+                        tvEventsEmpty.setVisibility(View.GONE);
+
+                        List<DocumentSnapshot> docs = new ArrayList<>(snap.getDocuments());
+                        docs.sort(new Comparator<DocumentSnapshot>() {
+                            @Override
+                            public int compare(DocumentSnapshot a, DocumentSnapshot b) {
+                                Long ta = a.getLong("timestamp");
+                                Long tb = b.getLong("timestamp");
+                                if (ta == null) return 1;
+                                if (tb == null) return -1;
+                                return Long.compare(ta, tb);
+                            }
+                        });
+
+                        int showCount = Math.min(3, docs.size());
+                        for (int i = 0; i < showCount; i++) {
+                            String title  = docs.get(i).getString("title");
+                            String author = docs.get(i).getString("authorName");
+                            String time   = docs.get(i).getString("time");
+                            MainActivity.this.addEventRow(
+                                    title  != null ? title  : "",
                                     author != null ? author : "",
                                     time   != null ? time   : "",
                                     i < showCount - 1);
+                        }
                     }
                 });
     }
@@ -276,7 +305,6 @@ public class MainActivity extends BaseActivity {
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(4, 10, 4, 10);
 
-        // Turquoise left-side accent strip
         LinearLayout inner = new LinearLayout(this);
         inner.setOrientation(LinearLayout.HORIZONTAL);
         inner.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -333,23 +361,26 @@ public class MainActivity extends BaseActivity {
                 .whereEqualTo("familyCode", userFamilyCode)
                 .limit(20)
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<ShoppingItem> items = new ArrayList<>();
-                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                        ShoppingItem item = doc.toObject(ShoppingItem.class);
-                        if (item != null && !item.isChecked()) {
-                            items.add(item);
-                            if (items.size() == 3) break;
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot querySnapshot) {
+                        List<ShoppingItem> items = new ArrayList<>();
+                        for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                            ShoppingItem item = doc.toObject(ShoppingItem.class);
+                            if (item != null && !item.isChecked()) {
+                                items.add(item);
+                                if (items.size() == 3) break;
+                            }
                         }
-                    }
 
-                    shoppingWidgetContainer.removeAllViews();
-                    if (items.isEmpty()) {
-                        tvShoppingEmpty.setVisibility(View.VISIBLE);
-                    } else {
-                        tvShoppingEmpty.setVisibility(View.GONE);
-                        for (int i = 0; i < items.size(); i++) {
-                            addShoppingRow(items.get(i), i < items.size() - 1);
+                        shoppingWidgetContainer.removeAllViews();
+                        if (items.isEmpty()) {
+                            tvShoppingEmpty.setVisibility(View.VISIBLE);
+                        } else {
+                            tvShoppingEmpty.setVisibility(View.GONE);
+                            for (int i = 0; i < items.size(); i++) {
+                                MainActivity.this.addShoppingRow(items.get(i), i < items.size() - 1);
+                            }
                         }
                     }
                 });

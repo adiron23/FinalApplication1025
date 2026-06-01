@@ -6,6 +6,7 @@ import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -19,10 +20,13 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -31,11 +35,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -55,8 +66,8 @@ public class TasksActivity extends BaseActivity {
     private TaskAdapter adapter;
     private final List<Task> taskList     = new ArrayList<>();
     private final List<Task> filteredList = new ArrayList<>();
-    private final List<String> filterNames = new ArrayList<>();  // "הכל", child1, …
-    private final List<String> filterUids  = new ArrayList<>();  // "",    uid1, …
+    private final List<String> filterNames = new ArrayList<>();
+    private final List<String> filterUids  = new ArrayList<>();
     private final SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault());
 
     private static final String EVERYONE       = "";
@@ -77,23 +88,24 @@ public class TasksActivity extends BaseActivity {
         spinnerFilter = findViewById(R.id.spinnerFilter);
         ivFilterArrow = findViewById(R.id.ivFilterArrow);
 
-        // Animate arrow when spinner is touched
-        spinnerFilter.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                filterArrowUp = !filterArrowUp;
-                ivFilterArrow.animate()
-                        .rotation(filterArrowUp ? 180f : 0f)
-                        .setDuration(220)
-                        .start();
+        spinnerFilter.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    filterArrowUp = !filterArrowUp;
+                    ivFilterArrow.animate()
+                            .rotation(filterArrowUp ? 180f : 0f)
+                            .setDuration(220)
+                            .start();
+                }
+                return false;
             }
-            return false;
         });
 
         rvTasks.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TaskAdapter(filteredList);
         rvTasks.setAdapter(adapter);
 
-        // Request notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -103,108 +115,110 @@ public class TasksActivity extends BaseActivity {
         }
 
         checkPermissionsAndLoadData();
-        fabAddTask.setOnClickListener(v -> showAddTaskDialog());
-    }
-
-
-
-    private void checkPermissionsAndLoadData() {
-        db.collection("users").document(currentUid).get().addOnSuccessListener(doc -> {
-            if (!doc.exists()) return;
-            userRole       = doc.getString("role");
-            userFamilyCode = doc.getString("familyCode");
-            if ("הורה".equals(userRole)) {
-                fabAddTask.setVisibility(View.VISIBLE);
-                loadChildrenForFilter();
+        fabAddTask.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TasksActivity.this.showAddTaskDialog();
             }
-            loadTasksFromFirestore();
         });
     }
 
-    /** Populates the parent's filter spinner with child names. */
+    private void checkPermissionsAndLoadData() {
+        db.collection("users").document(currentUid).get()
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot doc) {
+                        if (!doc.exists()) return;
+                        userRole       = doc.getString("role");
+                        userFamilyCode = doc.getString("familyCode");
+                        if ("הורה".equals(userRole)) {
+                            fabAddTask.setVisibility(View.VISIBLE);
+                            TasksActivity.this.loadChildrenForFilter();
+                        }
+                        TasksActivity.this.loadTasksFromFirestore();
+                    }
+                });
+    }
+
     private void loadChildrenForFilter() {
         db.collection("users")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("role", "ילד/ה")
                 .get()
-                .addOnSuccessListener(snap -> {
-                    filterNames.clear();
-                    filterUids.clear();
-                    filterNames.add("הכל");
-                    filterUids.add("");
-                    for (QueryDocumentSnapshot doc : snap) {
-                        String name = doc.getString("name");
-                        if (name != null) {
-                            filterNames.add(name);
-                            filterUids.add(doc.getId());
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot snap) {
+                        filterNames.clear();
+                        filterUids.clear();
+                        filterNames.add("הכל");
+                        filterUids.add("");
+                        for (QueryDocumentSnapshot doc : snap) {
+                            String name = doc.getString("name");
+                            if (name != null) {
+                                filterNames.add(name);
+                                filterUids.add(doc.getId());
+                            }
                         }
-                    }
-                    if (filterNames.size() > 1) {
-                        ArrayAdapter<String> fa = new ArrayAdapter<>(this,
-                                android.R.layout.simple_spinner_item, filterNames);
-                        fa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                        spinnerFilter.setAdapter(fa);
-                        spinnerFilter.setOnItemSelectedListener(
-                                new android.widget.AdapterView.OnItemSelectedListener() {
-                                    @Override public void onItemSelected(
-                                            android.widget.AdapterView<?> p, View v, int pos, long id) {
-                                        // Reset arrow to pointing-down when selection is made
-                                        filterArrowUp = false;
-                                        if (ivFilterArrow != null)
-                                            ivFilterArrow.animate().rotation(0f).setDuration(220).start();
-                                        applyFilter(filterUids.get(pos));
-                                    }
-                                    @Override public void onNothingSelected(android.widget.AdapterView<?> p) {}
-                                });
-                        filterBar.setVisibility(View.VISIBLE);
+                        if (filterNames.size() > 1) {
+                            ArrayAdapter<String> fa = new ArrayAdapter<>(TasksActivity.this,
+                                    android.R.layout.simple_spinner_item, filterNames);
+                            fa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                            spinnerFilter.setAdapter(fa);
+                            spinnerFilter.setOnItemSelectedListener(
+                                    new android.widget.AdapterView.OnItemSelectedListener() {
+                                        @Override
+                                        public void onItemSelected(android.widget.AdapterView<?> p, View v, int pos, long id) {
+                                            filterArrowUp = false;
+                                            if (ivFilterArrow != null)
+                                                ivFilterArrow.animate().rotation(0f).setDuration(220).start();
+                                            TasksActivity.this.applyFilter(filterUids.get(pos));
+                                        }
+                                        @Override
+                                        public void onNothingSelected(android.widget.AdapterView<?> p) {}
+                                    });
+                            filterBar.setVisibility(View.VISIBLE);
+                        }
                     }
                 });
     }
 
-
-
-    /**
-     * Both parents and children query ALL family tasks.
-     * Filtering is done client-side so "everyone" tasks reach all children.
-     */
     private void loadTasksFromFirestore() {
         db.collection("tasks")
                 .whereEqualTo("familyCode", userFamilyCode)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null || value == null) return;
-                    taskList.clear();
-                    for (QueryDocumentSnapshot doc : value) {
-                        Task task = doc.toObject(Task.class);
-                        task.setTaskId(doc.getId());
-                        taskList.add(task);
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(QuerySnapshot value, FirebaseFirestoreException error) {
+                        if (error != null || value == null) return;
+                        taskList.clear();
+                        for (QueryDocumentSnapshot doc : value) {
+                            Task task = doc.toObject(Task.class);
+                            task.setTaskId(doc.getId());
+                            taskList.add(task);
+                        }
+                        taskList.sort(new Comparator<Task>() {
+                            @Override
+                            public int compare(Task a, Task b) {
+                                if (a.isDone() != b.isDone()) return a.isDone() ? 1 : -1;
+                                try {
+                                    String da = a.getDateTime(), db2 = b.getDateTime();
+                                    if (da == null || da.isEmpty()) return 1;
+                                    if (db2 == null || db2.isEmpty()) return -1;
+                                    return sdf.parse(da).compareTo(sdf.parse(db2));
+                                } catch (Exception e) { return 0; }
+                            }
+                        });
+                        int selPos = spinnerFilter.getSelectedItemPosition();
+                        String selectedUid = (filterUids.isEmpty() || selPos < 0 || selPos >= filterUids.size()) ? ""
+                                : filterUids.get(selPos);
+                        TasksActivity.this.applyFilter(selectedUid);
                     }
-                    // Undone tasks first, then sort by date ascending
-                    taskList.sort((a, b) -> {
-                        if (a.isDone() != b.isDone()) return a.isDone() ? 1 : -1;
-                        try {
-                            String da = a.getDateTime(), db2 = b.getDateTime();
-                            if (da == null || da.isEmpty()) return 1;
-                            if (db2 == null || db2.isEmpty()) return -1;
-                            return sdf.parse(da).compareTo(sdf.parse(db2));
-                        } catch (Exception e) { return 0; }
-                    });
-                    int selPos = spinnerFilter.getSelectedItemPosition();
-                    String selectedUid = (filterUids.isEmpty() || selPos < 0 || selPos >= filterUids.size()) ? ""
-                            : filterUids.get(selPos);
-                    applyFilter(selectedUid);
                 });
     }
 
-    /**
-     * Filters taskList → filteredList based on role and selected filter.
-     *
-     * Parent:  show tasks matching the filter spinner selection (empty = show all)
-     * Child:   show tasks assigned to them personally OR assigned to "כולם" (uid = "")
-     */
     private void applyFilter(String filterUid) {
         filteredList.clear();
         for (Task t : taskList) {
-            if (t.isDone()) continue;   // done tasks are hidden from the active list
+            if (t.isDone()) continue;
             String assignedUid = t.getAssignedToUid() != null ? t.getAssignedToUid() : "";
             if ("הורה".equals(userRole)) {
                 if (filterUid.isEmpty() || filterUid.equals(assignedUid)) {
@@ -220,15 +234,12 @@ public class TasksActivity extends BaseActivity {
         scheduleAlarmsForMyTasks();
     }
 
-
-
     private void scheduleAlarmsForMyTasks() {
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
         if (am == null) return;
         for (Task task : taskList) {
             if (task.isDone()) continue;
             String assignedUid = task.getAssignedToUid() != null ? task.getAssignedToUid() : "";
-            // Only schedule alarms for tasks that belong to the current user or "כולם"
             if (!assignedUid.isEmpty() && !assignedUid.equals(currentUid)) continue;
             if (task.getDateTime() == null || task.getDateTime().isEmpty()) continue;
             try {
@@ -254,71 +265,86 @@ public class TasksActivity extends BaseActivity {
         }
     }
 
-
-
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_task, null);
         builder.setView(dialogView);
 
-        TextInputEditText etTaskName    = dialogView.findViewById(R.id.etTaskName);
-        Spinner spinnerChildren         = dialogView.findViewById(R.id.spinnerChildren);
-        Button btnSetDate               = dialogView.findViewById(R.id.btnSetDate);
-        TextView tvSelectedDateTime     = dialogView.findViewById(R.id.tvSelectedDateTime);
+        TextInputEditText etTaskName = dialogView.findViewById(R.id.etTaskName);
+        Spinner spinnerChildren      = dialogView.findViewById(R.id.spinnerChildren);
+        Button btnSetDate            = dialogView.findViewById(R.id.btnSetDate);
+        TextView tvSelectedDateTime  = dialogView.findViewById(R.id.tvSelectedDateTime);
 
-        // "כולם" is always the first option; children are appended after
         ArrayList<String> assigneeNames = new ArrayList<>();
         ArrayList<String> assigneeUids  = new ArrayList<>();
         assigneeNames.add(EVERYONE_LABEL);
         assigneeUids.add(EVERYONE);
 
         final String[] finalDateTime = {""};
-        btnSetDate.setOnClickListener(v -> {
-            Calendar cal = Calendar.getInstance();
-            new DatePickerDialog(this, (view, year, month, day) -> {
-                String date = day + "/" + (month + 1) + "/" + year;
-                new TimePickerDialog(this, (view1, hour, minute) -> {
-                    finalDateTime[0] = date + " " + String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
-                    tvSelectedDateTime.setText("זמן נבחר: " + finalDateTime[0]);
-                }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+
+        btnSetDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Calendar cal = Calendar.getInstance();
+                new DatePickerDialog(TasksActivity.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int day) {
+                        String date = day + "/" + (month + 1) + "/" + year;
+                        new TimePickerDialog(TasksActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view1, int hour, int minute) {
+                                finalDateTime[0] = date + " " + String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+                                tvSelectedDateTime.setText("זמן נבחר: " + finalDateTime[0]);
+                            }
+                        }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
+                    }
+                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+            }
         });
 
-        builder.setPositiveButton("שמור", (dialog, which) -> {
-            String title = etTaskName.getText() != null ? etTaskName.getText().toString().trim() : "";
-            int idx      = spinnerChildren.getSelectedItemPosition();
-            if (title.isEmpty() || idx < 0 || idx >= assigneeUids.size() || finalDateTime[0].isEmpty()) {
-                Toast.makeText(this, "נא למלא שם משימה ותאריך", Toast.LENGTH_SHORT).show();
-                return;
+        builder.setPositiveButton("שמור", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String title = etTaskName.getText() != null ? etTaskName.getText().toString().trim() : "";
+                int idx      = spinnerChildren.getSelectedItemPosition();
+                if (title.isEmpty() || idx < 0 || idx >= assigneeUids.size() || finalDateTime[0].isEmpty()) {
+                    Toast.makeText(TasksActivity.this, "נא למלא שם משימה ותאריך", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                TasksActivity.this.saveTask(title, assigneeUids.get(idx), assigneeNames.get(idx), finalDateTime[0]);
             }
-            saveTask(title, assigneeUids.get(idx), assigneeNames.get(idx), finalDateTime[0]);
         });
         builder.setNegativeButton("ביטול", null);
 
-        // Load children, append after "כולם", then show dialog
         db.collection("users")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("role", "ילד/ה")
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        String name = doc.getString("name");
-                        if (name != null) {
-                            assigneeNames.add(name);
-                            assigneeUids.add(doc.getId());
+                .addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+                    @Override
+                    public void onSuccess(QuerySnapshot querySnapshot) {
+                        for (QueryDocumentSnapshot doc : querySnapshot) {
+                            String name = doc.getString("name");
+                            if (name != null) {
+                                assigneeNames.add(name);
+                                assigneeUids.add(doc.getId());
+                            }
                         }
+                        ArrayAdapter<String> sAdapter = new ArrayAdapter<>(TasksActivity.this,
+                                android.R.layout.simple_spinner_item, assigneeNames);
+                        sAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        spinnerChildren.setAdapter(sAdapter);
+                        builder.show();
                     }
-                    ArrayAdapter<String> sAdapter = new ArrayAdapter<>(this,
-                            android.R.layout.simple_spinner_item, assigneeNames);
-                    sAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    spinnerChildren.setAdapter(sAdapter);
-                    builder.show();
                 })
-                .addOnFailureListener(e -> Toast.makeText(this,
-                        "שגיאה בטעינת ילדים: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(TasksActivity.this,
+                                "שגיאה בטעינת ילדים: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
-
-
 
     private void saveTask(String title, String cUid, String cName, String time) {
         Map<String, Object> task = new HashMap<>();
@@ -329,23 +355,40 @@ public class TasksActivity extends BaseActivity {
         task.put("familyCode",     userFamilyCode);
         task.put("isDone",         false);
         db.collection("tasks").add(task)
-                .addOnFailureListener(e -> Toast.makeText(this,
-                        "שגיאה בשמירת משימה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(TasksActivity.this,
+                                "שגיאה בשמירת משימה: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void markTaskDone(String taskId) {
         db.collection("tasks").document(taskId)
                 .update("isDone", true)
-                .addOnSuccessListener(v ->
-                        Toast.makeText(this, "כל הכבוד! המשימה הושלמה.", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "שגיאה: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void v) {
+                        Toast.makeText(TasksActivity.this, "כל הכבוד! המשימה הושלמה.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(TasksActivity.this, "שגיאה: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void deleteTask(String taskId) {
         db.collection("tasks").document(taskId).delete()
-                .addOnSuccessListener(v ->
-                        Toast.makeText(this, "המשימה נמחקה", Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void v) {
+                        Toast.makeText(TasksActivity.this, "המשימה נמחקה", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
@@ -372,44 +415,52 @@ public class TasksActivity extends BaseActivity {
 
             boolean overdue = false;
             if (!task.isDone() && task.getDateTime() != null && !task.getDateTime().isEmpty()) {
-                try { overdue = sdf.parse(task.getDateTime()).before(new java.util.Date()); }
+                try { overdue = sdf.parse(task.getDateTime()).before(new Date()); }
                 catch (Exception ignored) {}
             }
             holder.priorityStripe.setBackgroundColor(overdue ? 0xFFE53935 : 0xFF6D4C41);
             holder.tvPriorityLabel.setVisibility(View.GONE);
 
-            // All visible tasks are undone — reset any recycled state
             holder.tvTitle.setPaintFlags(
                     holder.tvTitle.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
             holder.tvTitle.setTextColor(Color.parseColor("#3E2723"));
             holder.itemView.setAlpha(1f);
 
-            // Determine if this user is allowed to complete this task
             String assignedUid = task.getAssignedToUid() != null ? task.getAssignedToUid() : "";
             boolean isMyTask   = assignedUid.equals(currentUid);
             boolean isEveryone = assignedUid.equals(EVERYONE);
             boolean canDone    = "הורה".equals(userRole) || isMyTask || isEveryone;
 
-            // Suppress listener while programmatically setting state
             holder.cbTaskDone.setOnCheckedChangeListener(null);
             holder.cbTaskDone.setChecked(task.isDone());
             holder.cbTaskDone.setEnabled(canDone && !task.isDone());
 
             if (canDone && !task.isDone()) {
-                holder.cbTaskDone.setOnCheckedChangeListener((btn, isChecked) -> {
-                    if (isChecked) markTaskDone(task.getTaskId());
+                holder.cbTaskDone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton btn, boolean isChecked) {
+                        if (isChecked) TasksActivity.this.markTaskDone(task.getTaskId());
+                    }
                 });
             }
 
             if ("הורה".equals(userRole)) {
-                holder.itemView.setOnLongClickListener(v -> {
-                    new AlertDialog.Builder(TasksActivity.this)
-                            .setTitle("מחיקת משימה")
-                            .setMessage("למחוק את \"" + task.getTaskName() + "\"?")
-                            .setPositiveButton("מחק", (d, w) -> deleteTask(task.getTaskId()))
-                            .setNegativeButton("ביטול", null)
-                            .show();
-                    return true;
+                holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        new AlertDialog.Builder(TasksActivity.this)
+                                .setTitle("מחיקת משימה")
+                                .setMessage("למחוק את \"" + task.getTaskName() + "\"?")
+                                .setPositiveButton("מחק", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface d, int w) {
+                                        TasksActivity.this.deleteTask(task.getTaskId());
+                                    }
+                                })
+                                .setNegativeButton("ביטול", null)
+                                .show();
+                        return true;
+                    }
                 });
             } else {
                 holder.itemView.setOnLongClickListener(null);
@@ -420,9 +471,9 @@ public class TasksActivity extends BaseActivity {
         public int getItemCount() { return list.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView  tvTitle, tvAssignee, tvTime, tvPriorityLabel;
-            View      priorityStripe;
-            CheckBox  cbTaskDone;
+            TextView tvTitle, tvAssignee, tvTime, tvPriorityLabel;
+            View     priorityStripe;
+            CheckBox cbTaskDone;
 
             ViewHolder(@NonNull View itemView) {
                 super(itemView);

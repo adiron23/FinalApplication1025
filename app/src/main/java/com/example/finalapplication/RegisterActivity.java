@@ -2,35 +2,44 @@ package com.example.finalapplication;
 
 import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
-import androidx.core.content.FileProvider;
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -38,20 +47,20 @@ public class RegisterActivity extends AppCompatActivity {
     private static final int RC_GOOGLE_SIGN_IN = 9001;
 
     private static final String[] AVATAR_NAMES = {
-        "duck", "gorilla", "hen", "sloth",
-        "penguin", "panda", "monkey", "sealion", "koala"
+            "duck", "gorilla", "hen", "sloth",
+            "penguin", "panda", "monkey", "sealion", "koala"
     };
 
     private EditText  eTEmail, eTPass, eTName, eTBirth;
     private TextView  tVMsg, btnGoToLogin;
     private Button    createUser, btnSelectImage;
     private ImageView profileImageView;
-    private FirebaseAuth       refAuth;
-    private FirebaseFirestore  db;
+    private FirebaseAuth      refAuth;
+    private FirebaseFirestore db;
 
-    private Uri    selectedImageUri   = null;  // gallery/camera pick
-    private String selectedAvatarName = null;  // preset avatar name e.g. "duck"
-    private Uri    cameraPhotoUri     = null;  // temp file URI for camera
+    private Uri    selectedImageUri   = null;
+    private String selectedAvatarName = null;
+    private Uri    cameraPhotoUri     = null;
 
     private ActivityResultLauncher<String[]> galleryLauncher;
     private ActivityResultLauncher<Uri>      cameraLauncher;
@@ -71,33 +80,37 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Camera launcher
         cameraLauncher = registerForActivityResult(
                 new ActivityResultContracts.TakePicture(),
-                success -> {
-                    if (Boolean.TRUE.equals(success) && cameraPhotoUri != null) {
-                        selectedImageUri   = cameraPhotoUri;
-                        selectedAvatarName = null;
-                        profileImageView.setPadding(0, 0, 0, 0);
-                        profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        profileImageView.setImageURI(selectedImageUri);
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean success) {
+                        if (Boolean.TRUE.equals(success) && cameraPhotoUri != null) {
+                            selectedImageUri   = cameraPhotoUri;
+                            selectedAvatarName = null;
+                            profileImageView.setPadding(0, 0, 0, 0);
+                            profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            profileImageView.setImageURI(selectedImageUri);
+                        }
                     }
                 });
 
-        // Gallery launcher (modern API)
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.OpenDocument(),
-                uri -> {
-                    if (uri != null) {
-                        try {
-                            getContentResolver().takePersistableUriPermission(
-                                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        } catch (Exception ignored) {}
-                        selectedImageUri   = uri;
-                        selectedAvatarName = null;
-                        profileImageView.setPadding(0, 0, 0, 0);
-                        profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        profileImageView.setImageURI(uri);
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        if (uri != null) {
+                            try {
+                                RegisterActivity.this.getContentResolver().takePersistableUriPermission(
+                                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            } catch (Exception ignored) {}
+                            selectedImageUri   = uri;
+                            selectedAvatarName = null;
+                            profileImageView.setPadding(0, 0, 0, 0);
+                            profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            profileImageView.setImageURI(uri);
+                        }
                     }
                 });
 
@@ -114,25 +127,46 @@ public class RegisterActivity extends AppCompatActivity {
         refAuth = FirebaseAuth.getInstance();
         db      = FirebaseFirestore.getInstance();
 
-        btnSelectImage.setOnClickListener(v -> showImageSourceChooser());
-        createUser.setOnClickListener(v -> registerUser());
-        btnGoToLogin.setOnClickListener(v -> {
-            startActivity(new Intent(this, LogInActivity.class));
-            finish();
+        btnSelectImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RegisterActivity.this.showImageSourceChooser();
+            }
         });
 
-        eTBirth.setOnClickListener(v -> {
-            final Calendar calendar = Calendar.getInstance();
-            new DatePickerDialog(this,
-                    (view, year, month, day) ->
-                            eTBirth.setText(day + "/" + (month + 1) + "/" + year),
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH)
-            ).show();
+        createUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RegisterActivity.this.registerUser();
+            }
         });
 
-        // Google Sign-Up
+        btnGoToLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(RegisterActivity.this, LogInActivity.class));
+                finish();
+            }
+        });
+
+        eTBirth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Calendar calendar = Calendar.getInstance();
+                new DatePickerDialog(RegisterActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePicker view, int year, int month, int day) {
+                                eTBirth.setText(day + "/" + (month + 1) + "/" + year);
+                            }
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                ).show();
+            }
+        });
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
@@ -141,21 +175,26 @@ public class RegisterActivity extends AppCompatActivity {
 
         Button btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn);
         if (btnGoogleSignIn != null) {
-            btnGoogleSignIn.setOnClickListener(v ->
-                    startActivityForResult(mGoogleSignInClient.getSignInIntent(), RC_GOOGLE_SIGN_IN));
+            btnGoogleSignIn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivityForResult(mGoogleSignInClient.getSignInIntent(), RC_GOOGLE_SIGN_IN);
+                }
+            });
         }
     }
-
-
 
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "בחר אווטאר"};
         new AlertDialog.Builder(this)
                 .setTitle("בחר תמונת פרופיל")
-                .setItems(options, (d, which) -> {
-                    if (which == 0)      launchCamera();
-                    else if (which == 1) galleryLauncher.launch(new String[]{"image/*"});
-                    else                 showAvatarPicker();
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int which) {
+                        if (which == 0)      RegisterActivity.this.launchCamera();
+                        else if (which == 1) galleryLauncher.launch(new String[]{"image/*"});
+                        else                 RegisterActivity.this.showAvatarPicker();
+                    }
                 })
                 .show();
     }
@@ -191,7 +230,7 @@ public class RegisterActivity extends AppCompatActivity {
             if (resId == 0) continue;
 
             LinearLayout cell = new LinearLayout(this);
-            cell.setOrientation(LinearLayout.VERTICAL);
+            cell.setOrientation(LinearLayout.HORIZONTAL);
             cell.setGravity(android.view.Gravity.CENTER);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -204,15 +243,18 @@ public class RegisterActivity extends AppCompatActivity {
             img.setScaleType(ImageView.ScaleType.FIT_CENTER);
             cell.addView(img);
 
-            final String name  = avatarName;
+            final String name   = avatarName;
             final int    resId2 = resId;
-            cell.setOnClickListener(v -> {
-                selectedAvatarName = name;
-                selectedImageUri   = null;
-                profileImageView.setPadding(0, 0, 0, 0);
-                profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                profileImageView.setImageResource(resId2);
-                if (holder[0] != null) holder[0].dismiss();
+            cell.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectedAvatarName = name;
+                    selectedImageUri   = null;
+                    profileImageView.setPadding(0, 0, 0, 0);
+                    profileImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    profileImageView.setImageResource(resId2);
+                    if (holder[0] != null) holder[0].dismiss();
+                }
             });
 
             row.addView(cell);
@@ -226,22 +268,21 @@ public class RegisterActivity extends AppCompatActivity {
         holder[0].show();
     }
 
-
-
     private void checkUserStatusAndNavigate(String uid) {
         FirebaseFirestore.getInstance().collection("users").document(uid).get()
-                .addOnSuccessListener(doc -> {
-                    if (doc.exists() && doc.getString("familyCode") != null
-                            && !doc.getString("familyCode").isEmpty()) {
-                        startActivity(new Intent(this, MainActivity.class));
-                    } else {
-                        startActivity(new Intent(this, FamilyGatewayActivity.class));
+                .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                    @Override
+                    public void onSuccess(DocumentSnapshot doc) {
+                        if (doc.exists() && doc.getString("familyCode") != null
+                                && !doc.getString("familyCode").isEmpty()) {
+                            startActivity(new Intent(RegisterActivity.this, MainActivity.class));
+                        } else {
+                            startActivity(new Intent(RegisterActivity.this, FamilyGatewayActivity.class));
+                        }
+                        finish();
                     }
-                    finish();
                 });
     }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -264,23 +305,26 @@ public class RegisterActivity extends AppCompatActivity {
 
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
         FirebaseAuth.getInstance().signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    pd.dismiss();
-                    if (!task.isSuccessful()) {
-                        Exception e = task.getException();
-                        tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
-                        return;
-                    }
-                    FirebaseUser user = task.getResult().getUser();
-                    boolean isNew     = task.getResult().getAdditionalUserInfo() != null
-                            && task.getResult().getAdditionalUserInfo().isNewUser();
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        pd.dismiss();
+                        if (!task.isSuccessful()) {
+                            Exception e = task.getException();
+                            tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                            return;
+                        }
+                        FirebaseUser user = task.getResult().getUser();
+                        boolean isNew = task.getResult().getAdditionalUserInfo() != null
+                                && task.getResult().getAdditionalUserInfo().isNewUser();
 
-                    if (isNew) {
-                        String displayName = account.getDisplayName() != null ? account.getDisplayName() : "";
-                        String email       = account.getEmail()       != null ? account.getEmail()       : "";
-                        saveGoogleUserToFirestore(user.getUid(), email, displayName);
-                    } else {
-                        checkUserStatusAndNavigate(user.getUid());
+                        if (isNew) {
+                            String displayName = account.getDisplayName() != null ? account.getDisplayName() : "";
+                            String email       = account.getEmail()       != null ? account.getEmail()       : "";
+                            RegisterActivity.this.saveGoogleUserToFirestore(user.getUid(), email, displayName);
+                        } else {
+                            RegisterActivity.this.checkUserStatusAndNavigate(user.getUid());
+                        }
                     }
                 });
     }
@@ -296,16 +340,22 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("role",       "");
 
         db.collection("users").document(uid).set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    Intent intent = new Intent(this, FamilyGatewayActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Intent intent = new Intent(RegisterActivity.this, FamilyGatewayActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        finish();
+                    }
                 })
-                .addOnFailureListener(e -> tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage()));
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage());
+                    }
+                });
     }
-
-
 
     private void registerUser() {
         String email = eTEmail.getText().toString().trim();
@@ -322,25 +372,29 @@ public class RegisterActivity extends AppCompatActivity {
         pd.setMessage("יוצר משתמש...");
         pd.show();
 
-        refAuth.createUserWithEmailAndPassword(email, pass).addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null && task.getResult().getUser() != null) {
-                saveUserToFirestore(task.getResult().getUser().getUid(), email, name, birth, pd);
-            } else {
-                pd.dismiss();
-                Exception e = task.getException();
-                tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
-            }
-        });
+        refAuth.createUserWithEmailAndPassword(email, pass)
+                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful() && task.getResult() != null && task.getResult().getUser() != null) {
+                            RegisterActivity.this.saveUserToFirestore(
+                                    task.getResult().getUser().getUid(), email, name, birth, pd);
+                        } else {
+                            pd.dismiss();
+                            Exception e = task.getException();
+                            tVMsg.setText("שגיאה: " + (e != null ? e.getMessage() : "לא ידוע"));
+                        }
+                    }
+                });
     }
 
     private void saveUserToFirestore(String uid, String email, String name,
                                      String birth, ProgressDialog pd) {
-        // Resolve which image value to save
         String imageValue = "";
         if (selectedAvatarName != null) {
-            imageValue = selectedAvatarName;           // e.g. "duck"
+            imageValue = selectedAvatarName;
         } else if (selectedImageUri != null) {
-            imageValue = selectedImageUri.toString();  // content:// URI
+            imageValue = selectedImageUri.toString();
         }
 
         Map<String, Object> userData = new HashMap<>();
@@ -353,16 +407,22 @@ public class RegisterActivity extends AppCompatActivity {
         userData.put("role",       "");
 
         db.collection("users").document(uid).set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    pd.dismiss();
-                    Intent intent = new Intent(this, FamilyGatewayActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    finish();
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        pd.dismiss();
+                        Intent intent = new Intent(RegisterActivity.this, FamilyGatewayActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        finish();
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    pd.dismiss();
-                    tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage());
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        pd.dismiss();
+                        tVMsg.setText("שגיאה בשמירת נתונים: " + e.getMessage());
+                    }
                 });
     }
 }

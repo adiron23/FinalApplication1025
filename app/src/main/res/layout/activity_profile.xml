@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ══════════════════════════════════════════════════════════════
-   PROFILE — Warm Brown redesign
-   Header:  solid brown (#6D4C41), 200dp, curved 36dp bottom
-            centered cream avatar circle (88dp, 3dp cream border)
-            name bold cream, email muted rose-brown
-   Cards:   warm surface (#FDFAF5), 16dp radius, 1dp warm divider
-   Buttons: brown primary, outline secondary, danger red
-  ══════════════════════════════════════════════════════════════
--->
+
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -25,9 +17,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- ═══════════════════════════════════════════════════════
-                 SOLID BROWN HERO HEADER
-                 ═══════════════════════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -48,7 +37,7 @@
                     android:background="@drawable/bg_circle_white"
                     android:scaleType="centerInside" />
 
-                <!-- Name — bold cream -->
+
                 <TextView
                     android:id="@+id/tvUserName"
                     android:layout_width="wrap_content"
@@ -60,7 +49,7 @@
                     android:letterSpacing="-0.01"
                     android:text="שם משתמש" />
 
-                <!-- Email — muted rose-brown -->
+
                 <TextView
                     android:id="@+id/tvUserEmail"
                     android:layout_width="wrap_content"
@@ -72,10 +61,6 @@
 
             </LinearLayout>
 
-            <!-- ═══════════════════════════════════════════════════════
-                 FLOATING CARDS
-                 Float -36dp over the header curve for visual depth
-                 ═══════════════════════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -84,7 +69,7 @@
                 android:paddingBottom="32dp"
                 android:layout_marginTop="-36dp">
 
-                <!-- ── Personal Info Card ──────────────────────────── -->
+
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -99,7 +84,7 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <!-- Card label -->
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -110,7 +95,7 @@
                             android:letterSpacing="0.08"
                             android:layout_marginBottom="16dp" />
 
-                        <!-- Birth date row -->
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -143,7 +128,7 @@
                             android:background="@color/colorDivider"
                             android:layout_marginBottom="12dp" />
 
-                        <!-- Role row -->
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -172,7 +157,8 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- ── Family Card ────────────────────────────────── -->
+
+
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -217,7 +203,8 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- ── Actions ────────────────────────────────────── -->
+
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="12dp" />

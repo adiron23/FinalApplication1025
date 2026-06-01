@@ -39,9 +39,6 @@
             android:exported="false" />
 
         <activity
-            android:name=".JournalActivity"
-            android:exported="false" />
-        <activity
             android:name=".CalendarActivity"
             android:exported="false" />
         <activity
@@ -49,9 +46,6 @@
             android:exported="false" />
         <activity
             android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ItemShoppingActivity"
             android:exported="false" />
         <activity
             android:name=".ShoppingListActivity"
