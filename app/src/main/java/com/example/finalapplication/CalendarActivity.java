@@ -77,6 +77,7 @@ public class CalendarActivity extends BaseActivity {
 
     private static final int REQUEST_CALENDAR_PERMISSION = 201;
 
+    // מאתחל את המסך: מגדיר views, ניווט חודשי, כפתור הוספת אירוע וסנכרון, וטוען נתוני משתמש
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +112,7 @@ public class CalendarActivity extends BaseActivity {
         loadUserThenMonth();
     }
 
+    // מחבר את כל ה-views למשתנים
     private void bindViews() {
         tvMonthYear       = findViewById(R.id.tvMonthYear);
         btnPrev           = findViewById(R.id.btnPrevMonth);
@@ -123,6 +125,7 @@ public class CalendarActivity extends BaseActivity {
         fabAddEvent       = findViewById(R.id.fabAddEvent);
     }
 
+    // בונה את שורת כותרות הימים (א׳ עד ש׳) בראש הלוח
     private void buildDayHeaderRow() {
         rowDayHeaders.removeAllViews();
         for (String label : DAY_HEADERS) {
@@ -139,6 +142,7 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // מגדיר את ה-RecyclerViews: אחד לתצוגת ימי החודש ואחד לרשימת האירועים
     private void setupRecyclerViews() {
         dayAdapter = new DayAdapter();
         rvDays.setLayoutManager(new GridLayoutManager(this, 7));
@@ -149,6 +153,7 @@ public class CalendarActivity extends BaseActivity {
         rvEvents.setAdapter(eventAdapter);
     }
 
+    // מגדיר את כפתורי החץ לניווט בין חודשים
     private void setupMonthNavigation() {
         btnPrev.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -164,6 +169,7 @@ public class CalendarActivity extends BaseActivity {
         });
     }
 
+    // מעביר חודש קדימה או אחורה ומרענן את התצוגה
     private void shiftMonth(int delta) {
         displayedMonth.add(Calendar.MONTH, delta);
         selectedDate = null;
@@ -176,6 +182,7 @@ public class CalendarActivity extends BaseActivity {
         if (userFamilyCode != null) loadMonthDots();
     }
 
+    // טוען את פרטי המשתמש מ-Firestore (שם, קוד משפחה, תפקיד) ואז טוען את נקודות האירועים בחודש
     private void loadUserThenMonth() {
         db.collection("users").document(currentUid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -190,6 +197,7 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
+    // טוען מ-Firestore את כל האירועים של החודש המוצג וסומן את הימים שיש בהם אירועים (נקודות)
     private void loadMonthDots() {
         int year    = displayedMonth.get(Calendar.YEAR);
         int month   = displayedMonth.get(Calendar.MONTH) + 1;
@@ -225,6 +233,7 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
+    // טוען מ-Firestore את האירועים של יום ספציפי שנבחר ומציג אותם ברשימה
     private void loadDayEvents(String date) {
         db.collection("events")
                 .whereEqualTo("familyCode", userFamilyCode)
@@ -259,6 +268,7 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
+    // בונה את רשת ימי החודש עם סימון היום הנוכחי, היום הנבחר והימים עם אירועים
     private void buildGrid() {
         updateHeader();
         dayItems.clear();
@@ -290,12 +300,14 @@ public class CalendarActivity extends BaseActivity {
         dayAdapter.notifyDataSetChanged();
     }
 
+    // מעדכן את כותרת החודש והשנה בראש המסך
     private void updateHeader() {
         String text = MONTH_NAMES[displayedMonth.get(Calendar.MONTH)]
                 + "  " + displayedMonth.get(Calendar.YEAR);
         tvMonthYear.setText(text);
     }
 
+    // פותח דיאלוג להוספת אירוע חדש עם שדות כותרת, הערות ובחירת שעה
     private void showAddEventDialog() {
         String target = selectedDate != null ? selectedDate : todayStr();
 
@@ -343,6 +355,7 @@ public class CalendarActivity extends BaseActivity {
                 .show();
     }
 
+    // שומר אירוע חדש ב-Firestore ומרענן את הלוח והרשימה
     private void saveEvent(String title, String notes, String date, String time) {
         Map<String, Object> data = new HashMap<>();
         data.put("title",      title);
@@ -371,6 +384,7 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
+    // מוחק אירוע מ-Firestore ומרענן את התצוגה
     private void deleteEvent(String eventId, String date) {
         db.collection("events").document(eventId).delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -382,15 +396,18 @@ public class CalendarActivity extends BaseActivity {
                 });
     }
 
+    // מחזיר תאריך בפורמט "yyyy-MM-dd"
     private String dateStr(int year, int month, int day) {
         return String.format(Locale.US, "%04d-%02d-%02d", year, month, day);
     }
 
+    // מחזיר את תאריך היום בפורמט "yyyy-MM-dd"
     private String todayStr() {
         Calendar c = Calendar.getInstance();
         return dateStr(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
     }
 
+    // ממיר תאריך מפורמט ISO לפורמט קריא (d/M/yyyy)
     private String humanDate(String iso) {
         try {
             SimpleDateFormat in  = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
@@ -399,6 +416,7 @@ public class CalendarActivity extends BaseActivity {
         } catch (Exception e) { return iso; }
     }
 
+    // מודל נתונים פנימי לתא יום בלוח (מספר היום, האם היום, האם נבחר, האם יש אירועים)
     private static class DayItem {
         final int day;
         final boolean isToday;
@@ -409,8 +427,10 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // אדפטר לתצוגת ימי החודש בגריד – מטפל בסימון ולחיצה על יום
     private class DayAdapter extends RecyclerView.Adapter<DayAdapter.VH> {
 
+        // יוצר תא יום חדש מה-layout המתאים
         @NonNull @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext())
@@ -423,6 +443,7 @@ public class CalendarActivity extends BaseActivity {
             return new VH(v);
         }
 
+        // מציג יום בתא: מספר, סימון היום/נבחר, נקודת אירוע, ולחיצה לבחירת יום
         @Override
         public void onBindViewHolder(@NonNull VH h, int position) {
             DayItem item = dayItems.get(position);
@@ -485,6 +506,7 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // מטפל בלחיצה על כפתור הסנכרון – בודק הרשאות ומבצע סנכרון אם יש אירועים
     private void onSyncClicked() {
         if (monthEvents.isEmpty()) {
             Toast.makeText(this, "אין אירועים לסנכרון בחודש זה", Toast.LENGTH_SHORT).show();
@@ -502,6 +524,7 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // מקבל את תוצאת בקשת ההרשאה לגישה ליומן המכשיר
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
@@ -515,6 +538,7 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // מציג דיאלוג אישור לפני הייצוא ליומן המכשיר
     private void confirmAndSync() {
         String month = MONTH_NAMES[displayedMonth.get(Calendar.MONTH)]
                 + " " + displayedMonth.get(Calendar.YEAR);
@@ -532,6 +556,7 @@ public class CalendarActivity extends BaseActivity {
                 .show();
     }
 
+    // מייצא את אירועי החודש ליומן Google במכשיר
     private void exportEventsToDeviceCalendar() {
         long calId = getPrimaryCalendarId();
         if (calId == -1) {
@@ -560,6 +585,7 @@ public class CalendarActivity extends BaseActivity {
         Toast.makeText(this, "סונכרנו " + count + " אירועים בהצלחה", Toast.LENGTH_SHORT).show();
     }
 
+    // מחזיר את ה-ID של לוח השנה הראשי במכשיר
     private long getPrimaryCalendarId() {
         try (android.database.Cursor cursor = getContentResolver().query(
                 CalendarContract.Calendars.CONTENT_URI,
@@ -581,6 +607,7 @@ public class CalendarActivity extends BaseActivity {
         return -1;
     }
 
+    // ממיר תאריך ושעה של אירוע למספר מילישניות (לצורך שמירה ביומן)
     private long parseEventMillis(String date, String time) {
         try {
             String t = (time != null && !time.isEmpty()) ? time : "09:00";
@@ -592,8 +619,10 @@ public class CalendarActivity extends BaseActivity {
         }
     }
 
+    // אדפטר לרשימת האירועים של היום הנבחר – מציג כותרת, שעה, מחבר והערות, ומאפשר מחיקה בלחיצה ארוכה
     private class EventAdapter extends RecyclerView.Adapter<EventAdapter.VH> {
 
+        // יוצר תצוגת אירוע חדשה מה-layout המתאים
         @NonNull @Override
         public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext())
@@ -601,6 +630,7 @@ public class CalendarActivity extends BaseActivity {
             return new VH(v);
         }
 
+        // ממלא את פרטי האירוע בתצוגה: כותרת, שעה, שם המוסיף, הערות, ואפשרות מחיקה
         @Override
         public void onBindViewHolder(@NonNull VH h, int position) {
             CalendarEvent e = dayEvents.get(position);

@@ -62,22 +62,19 @@ public class ProfileActivity extends BaseActivity {
     private Button       btnInviteMember;
     private FirebaseFirestore db;
 
-    private String currentUid        = "";
-    private String currentUserName   = "";
-    private String currentEmail      = "";
-    private String currentBirthDate  = "";
-    private String userFamilyCode    = "";
-    private String currentImageUri   = "";
+    private String currentUid, currentUserName, currentEmail, currentBirthDate;
+    private String userFamilyCode, currentImageUri;
     private boolean isCurrentUserParent = false;
 
-    private Uri     pendingImageUri    = null;
-    private String  pendingAvatarName  = null;
-    private ImageView dialogAvatarPreview = null;
-    private Uri cameraPhotoUri = null;
+    private Uri       pendingImageUri;
+    private String    pendingAvatarName;
+    private ImageView dialogAvatarPreview;
+    private Uri       cameraPhotoUri;
 
     private ActivityResultLauncher<Uri>      cameraLauncher;
     private ActivityResultLauncher<String[]> galleryLauncher;
 
+    // מאתחל את המסך: מגדיר משגרי מצלמה וגלריה, מחבר views וטוען פרופיל משתמש
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,7 +88,7 @@ public class ProfileActivity extends BaseActivity {
                     @Override
                     public void onActivityResult(Boolean success) {
                         if (Boolean.TRUE.equals(success) && cameraPhotoUri != null) {
-                            pendingImageUri = cameraPhotoUri;
+                            pendingImageUri   = cameraPhotoUri;
                             pendingAvatarName = null;
                             if (dialogAvatarPreview != null)
                                 dialogAvatarPreview.setImageURI(pendingImageUri);
@@ -109,7 +106,7 @@ public class ProfileActivity extends BaseActivity {
                                 ProfileActivity.this.getContentResolver().takePersistableUriPermission(
                                         uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                             } catch (Exception ignored) {}
-                            pendingImageUri = uri;
+                            pendingImageUri   = uri;
                             pendingAvatarName = null;
                             if (dialogAvatarPreview != null)
                                 dialogAvatarPreview.setImageURI(uri);
@@ -126,6 +123,7 @@ public class ProfileActivity extends BaseActivity {
         }
     }
 
+    // מחבר את כל ה-views למשתנים ומגדיר כפתורי התנתקות ועריכת פרופיל
     private void initViews() {
         ivAvatar          = findViewById(R.id.ivAvatar);
         tvUserName        = findViewById(R.id.tvUserName);
@@ -153,6 +151,7 @@ public class ProfileActivity extends BaseActivity {
         });
     }
 
+    // טוען את פרטי המשתמש מ-Firestore ומציג אותם במסך, כולל תמונה ופרטי משפחה
     private void loadUserProfile(String uid) {
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -191,6 +190,7 @@ public class ProfileActivity extends BaseActivity {
                 });
     }
 
+    // מציג תמונת פרופיל ב-ImageView – תומך ב-URI מהגלריה/מצלמה או שם אווטאר מ-drawable
     private void applyAvatarToView(String value, ImageView target) {
         if (value == null || value.isEmpty()) return;
         if (value.startsWith("content://") || value.startsWith("file://")) {
@@ -206,6 +206,7 @@ public class ProfileActivity extends BaseActivity {
         }
     }
 
+    // טוען את שם המשפחה וכל חברי המשפחה מ-Firestore ומציג אותם בכרטיסיות (הורים קודם)
     private void loadFamilyData(String familyCode, String uid) {
         db.collection("families").document(familyCode).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -237,6 +238,7 @@ public class ProfileActivity extends BaseActivity {
                 });
     }
 
+    // יוצר ומוסיף כרטיסיית חבר משפחה לתצוגה, כולל תמונה/אות, שם, תפקיד וכפתור הסרה (להורה בלבד)
     private void addFamilyCard(QueryDocumentSnapshot doc, String currentUserId) {
         String memberId    = doc.getId();
         String memberName  = doc.getString("name")     != null ? doc.getString("name")     : "?";
@@ -267,7 +269,7 @@ public class ProfileActivity extends BaseActivity {
 
         if (isCurrentUserParent && !memberId.equals(currentUserId)) {
             btnRemove.setVisibility(View.VISIBLE);
-            final String finalMemberId = memberId;
+            final String finalMemberId   = memberId;
             final String finalMemberName = memberName;
             btnRemove.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -280,6 +282,7 @@ public class ProfileActivity extends BaseActivity {
         familyContainer.addView(card);
     }
 
+    // פותח דיאלוג עריכת פרופיל עם שדות שם, תאריך לידה, אימייל, סיסמה ובחירת תמונה
     private void showEditProfileDialog() {
         pendingImageUri   = null;
         pendingAvatarName = null;
@@ -287,11 +290,11 @@ public class ProfileActivity extends BaseActivity {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_edit_profile, null);
 
         dialogAvatarPreview = view.findViewById(R.id.ivEditAvatar);
-        Button btnPickImage = view.findViewById(R.id.btnPickProfileImage);
-        EditText etName     = view.findViewById(R.id.etEditName);
-        EditText etBirth    = view.findViewById(R.id.etEditBirth);
-        EditText etEmail    = view.findViewById(R.id.etEditEmail);
-        EditText etPassword = view.findViewById(R.id.etEditPassword);
+        Button   btnPickImage = view.findViewById(R.id.btnPickProfileImage);
+        EditText etName       = view.findViewById(R.id.etEditName);
+        EditText etBirth      = view.findViewById(R.id.etEditBirth);
+        EditText etEmail      = view.findViewById(R.id.etEditEmail);
+        EditText etPassword   = view.findViewById(R.id.etEditPassword);
 
         etName.setText(currentUserName);
         etBirth.setText(currentBirthDate);
@@ -305,6 +308,7 @@ public class ProfileActivity extends BaseActivity {
             }
         });
 
+        // פותח בורר תאריך בלחיצה על שדה תאריך הלידה
         etBirth.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -334,6 +338,7 @@ public class ProfileActivity extends BaseActivity {
                 })
                 .create();
 
+        // מאמת קלט ושומר שינויים בלחיצה על "שמור"
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface d) {
@@ -363,6 +368,7 @@ public class ProfileActivity extends BaseActivity {
         dialog.show();
     }
 
+    // מציג דיאלוג לבחירת מקור תמונה: מצלמה, גלריה או אווטאר מוכן
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "אווטאר מוכן"};
         new AlertDialog.Builder(this)
@@ -370,20 +376,21 @@ public class ProfileActivity extends BaseActivity {
                 .setItems(options, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int which) {
-                        if (which == 0) ProfileActivity.this.launchCamera();
+                        if (which == 0)      ProfileActivity.this.launchCamera();
                         else if (which == 1) ProfileActivity.this.launchGallery();
-                        else ProfileActivity.this.showAvatarPicker();
+                        else                 ProfileActivity.this.showAvatarPicker();
                     }
                 })
                 .show();
     }
 
+    // יוצר קובץ תמונה זמני ופותח את מצלמת המכשיר לצילום
     private void launchCamera() {
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            File photoFile  = File.createTempFile("PROFILE_" + timeStamp, ".jpg", storageDir);
-            cameraPhotoUri  = FileProvider.getUriForFile(this,
+            File storageDir  = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            File photoFile   = File.createTempFile("PROFILE_" + timeStamp, ".jpg", storageDir);
+            cameraPhotoUri   = FileProvider.getUriForFile(this,
                     "com.example.finalapplication.fileprovider", photoFile);
             cameraLauncher.launch(cameraPhotoUri);
         } catch (IOException e) {
@@ -391,10 +398,12 @@ public class ProfileActivity extends BaseActivity {
         }
     }
 
+    // פותח בורר תמונות מהגלריה
     private void launchGallery() {
         galleryLauncher.launch(new String[]{"image/*"});
     }
 
+    // מציג גלילה אופקית של אווטארים לבחירה ומעדכן את התצוגה המקדימה בדיאלוג
     private void showAvatarPicker() {
         HorizontalScrollView scrollView = new HorizontalScrollView(this);
         scrollView.setPadding(16, 24, 16, 16);
@@ -449,6 +458,7 @@ public class ProfileActivity extends BaseActivity {
         dialogHolder[0].show();
     }
 
+    // שומר שינויי פרופיל ב-Firestore ומעדכן אימייל/סיסמה ב-Firebase Auth במידת הצורך
     private void saveProfileChanges(String newName, String newBirth, String newEmail, String newPassword) {
         boolean nameChanged = !newName.equals(currentUserName);
 
@@ -481,7 +491,7 @@ public class ProfileActivity extends BaseActivity {
                         tvUserBirthDate.setText(newBirth.isEmpty() ? "—" : newBirth);
 
                         if (pendingAvatarName != null) {
-                            currentImageUri = pendingAvatarName;
+                            currentImageUri   = pendingAvatarName;
                             applyAvatarToView(pendingAvatarName, ivAvatar);
                             pendingAvatarName = null;
                         } else if (pendingImageUri != null) {
@@ -531,6 +541,7 @@ public class ProfileActivity extends BaseActivity {
         }
     }
 
+    // שולח מייל איפוס סיסמה לכתובת האימייל הנוכחית של המשתמש
     private void sendPasswordResetEmail() {
         if (currentEmail.isEmpty()) {
             Toast.makeText(this, "לא נמצאה כתובת אימייל", Toast.LENGTH_SHORT).show();
@@ -556,6 +567,7 @@ public class ProfileActivity extends BaseActivity {
                 });
     }
 
+    // מעדכן את שם המשתמש בכל המשימות ופריטי הקנייה המשויכים אליו אחרי שינוי שם
     private void propagateNameChange(String oldName, String newName) {
         db.collection("tasks")
                 .whereEqualTo("familyCode", userFamilyCode)
@@ -594,6 +606,7 @@ public class ProfileActivity extends BaseActivity {
                 });
     }
 
+    // מציג דיאלוג לבחירה בין שליחת הזמנה ליצירת חשבון חדש עבור חבר משפחה
     private void showAddMemberChooser() {
         String[] options = {"שלח הזמנה (קישור / קוד)", "צור חשבון חדש עבורם"};
         new AlertDialog.Builder(this)
@@ -609,15 +622,13 @@ public class ProfileActivity extends BaseActivity {
                 .show();
     }
 
+    // פותח דיאלוג ליצירת חשבון חדש לחבר משפחה עם שם, אימייל, סיסמה ותפקיד
     private void showCreateMemberDialog() {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_create_member, null);
 
-        com.google.android.material.textfield.TextInputEditText etName =
-                view.findViewById(R.id.etMemberName);
-        com.google.android.material.textfield.TextInputEditText etEmail =
-                view.findViewById(R.id.etMemberEmail);
-        com.google.android.material.textfield.TextInputEditText etPassword =
-                view.findViewById(R.id.etMemberPassword);
+        com.google.android.material.textfield.TextInputEditText etName     = view.findViewById(R.id.etMemberName);
+        com.google.android.material.textfield.TextInputEditText etEmail    = view.findViewById(R.id.etMemberEmail);
+        com.google.android.material.textfield.TextInputEditText etPassword = view.findViewById(R.id.etMemberPassword);
         RadioGroup rgRole = view.findViewById(R.id.rgRole);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -657,6 +668,7 @@ public class ProfileActivity extends BaseActivity {
         dialog.show();
     }
 
+    // יוצר חשבון Firebase Auth חדש לחבר משפחה דרך אפליקציה משנית (כדי לא להתנתק מהמשתמש הנוכחי) ושומר את פרטיו ב-Firestore
     private void createFamilyMemberAccount(String name, String email,
                                            String password, String role,
                                            AlertDialog dialog) {
@@ -717,6 +729,7 @@ public class ProfileActivity extends BaseActivity {
                 });
     }
 
+    // מציג דיאלוג עם קישור הצטרפות למשפחה – מאפשר שיתוף או העתקה ללוח
     private void showInviteDialog(String familyCode) {
         String link = "familyapp://join?code=" + familyCode;
 
@@ -745,6 +758,7 @@ public class ProfileActivity extends BaseActivity {
                 .show();
     }
 
+    // מציג דיאלוג אישור לפני הסרת חבר משפחה
     private void confirmRemoveMember(String memberId, String memberName) {
         new AlertDialog.Builder(this)
                 .setTitle("הסרת חבר משפחה")
@@ -759,6 +773,7 @@ public class ProfileActivity extends BaseActivity {
                 .show();
     }
 
+    // מסיר חבר משפחה ב-Firestore על ידי מחיקת קוד המשפחה והתפקיד שלו
     private void removeMember(String memberId) {
         db.collection("users").document(memberId)
                 .update("familyCode", "", "role", "")

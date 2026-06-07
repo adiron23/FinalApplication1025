@@ -2,11 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+    "תעודת הזהות" של האפליקציה מול אנדרואיד – הוא מגדיר אילו הרשאות האפליקציה צריכה,
+    אילו מסכים ומקלטים קיימים בה, מהו מסך הפתיחה, ואיזה מסך נפתח בלחיצה על קישור הזמנה.
+    -->
+
+    <!-- הרשאה לשליחת התראות (אנדרואיד 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- הרשאה לתזמון התראות מדויקות בשעה מוגדרת -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- הרשאה לקבלת אירוע הפעלה מחדש של המכשיר (לתזמון התראות מחדש) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- הרשאות לקריאה וכתיבה ביומן המכשיר (סנכרון אירועים) -->
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <!-- הרשאה לשימוש במצלמה לצילום תמונת פרופיל -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
@@ -19,7 +29,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FinalApplication">
 
-        <!-- Splash Screen -->
+        <!-- מסך הפתיחה – נקודת הכניסה הראשית לאפליקציה -->
         <activity
             android:name=".SplashActivity"
             android:exported="true">
@@ -29,36 +39,27 @@
             </intent-filter>
         </activity>
 
+        <!-- מקלט לשינויים בחיבור לאינטרנט -->
         <receiver
             android:name=".ConnectionReceiver"
             android:enabled="true"
             android:exported="true" />
 
+        <!-- מקלט להפעלת התראות משימות בזמן שנקבע -->
         <receiver
             android:name=".TaskAlarmReceiver"
             android:exported="false" />
 
-        <activity
-            android:name=".CalendarActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TasksActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ShoppingListActivity"
-            android:exported="false" />
-        <activity
-            android:name=".RegisterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LogInActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
+        <!-- כל שאר מסכי האפליקציה (לא נגישים ישירות מבחוץ) -->
+        <activity android:name=".CalendarActivity"     android:exported="false" />
+        <activity android:name=".TasksActivity"        android:exported="false" />
+        <activity android:name=".ProfileActivity"      android:exported="false" />
+        <activity android:name=".ShoppingListActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity"     android:exported="false" />
+        <activity android:name=".LogInActivity"        android:exported="false" />
+        <activity android:name=".MainActivity"         android:exported="false" />
+
+        <!-- מסך שער המשפחה – נגיש גם מקישור חיצוני (deep link) מסוג familyapp://join -->
         <activity
             android:name=".FamilyGatewayActivity"
             android:exported="true">
@@ -69,10 +70,10 @@
                 <data android:scheme="familyapp" android:host="join" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".CreateFamilyActivity"
-            android:exported="false" />
 
+        <activity android:name=".CreateFamilyActivity" android:exported="false" />
+
+        <!-- ספק קבצים לשיתוף תמונות מצלמה בצורה מאובטחת עם אפליקציות אחרות -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.finalapplication.fileprovider"
@@ -82,6 +83,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 
 </manifest>

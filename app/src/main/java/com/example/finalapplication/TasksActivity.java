@@ -73,6 +73,7 @@ public class TasksActivity extends BaseActivity {
     private static final String EVERYONE       = "";
     private static final String EVERYONE_LABEL = "כולם";
 
+    // מאתחל את המסך: מחבר views, מגדיר RecyclerView, בודק הרשאות התראות וטוען נתוני משתמש
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +89,7 @@ public class TasksActivity extends BaseActivity {
         spinnerFilter = findViewById(R.id.spinnerFilter);
         ivFilterArrow = findViewById(R.id.ivFilterArrow);
 
+        // מסובב את חץ הסינון בפתיחה וסגירה של ה-Spinner
         spinnerFilter.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -123,6 +125,7 @@ public class TasksActivity extends BaseActivity {
         });
     }
 
+    // טוען את תפקיד המשתמש וקוד המשפחה מ-Firestore ומציג את כפתור ההוספה להורים בלבד
     private void checkPermissionsAndLoadData() {
         db.collection("users").document(currentUid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -140,6 +143,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // טוען את רשימת הילדים במשפחה ומגדיר סרגל סינון משימות לפי ילד (להורים בלבד)
     private void loadChildrenForFilter() {
         db.collection("users")
                 .whereEqualTo("familyCode", userFamilyCode)
@@ -182,6 +186,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // מאזין בזמן אמת למשימות המשפחה מ-Firestore וממיין לפי סטטוס ותאריך
     private void loadTasksFromFirestore() {
         db.collection("tasks")
                 .whereEqualTo("familyCode", userFamilyCode)
@@ -215,6 +220,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // מסנן את המשימות לפי תפקיד המשתמש והבחירה בסינון, ומתזמן תזכורות
     private void applyFilter(String filterUid) {
         filteredList.clear();
         for (Task t : taskList) {
@@ -234,6 +240,7 @@ public class TasksActivity extends BaseActivity {
         scheduleAlarmsForMyTasks();
     }
 
+    // מתזמן התראות לכל משימה עתידית המוקצית למשתמש הנוכחי
     private void scheduleAlarmsForMyTasks() {
         AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
         if (am == null) return;
@@ -265,15 +272,16 @@ public class TasksActivity extends BaseActivity {
         }
     }
 
+    // פותח דיאלוג להוספת משימה חדשה עם שם, נמען, תאריך ושעה
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_task, null);
         builder.setView(dialogView);
 
-        TextInputEditText etTaskName = dialogView.findViewById(R.id.etTaskName);
-        Spinner spinnerChildren      = dialogView.findViewById(R.id.spinnerChildren);
-        Button btnSetDate            = dialogView.findViewById(R.id.btnSetDate);
-        TextView tvSelectedDateTime  = dialogView.findViewById(R.id.tvSelectedDateTime);
+        TextInputEditText etTaskName    = dialogView.findViewById(R.id.etTaskName);
+        Spinner spinnerChildren         = dialogView.findViewById(R.id.spinnerChildren);
+        Button btnSetDate               = dialogView.findViewById(R.id.btnSetDate);
+        TextView tvSelectedDateTime     = dialogView.findViewById(R.id.tvSelectedDateTime);
 
         ArrayList<String> assigneeNames = new ArrayList<>();
         ArrayList<String> assigneeUids  = new ArrayList<>();
@@ -282,6 +290,7 @@ public class TasksActivity extends BaseActivity {
 
         final String[] finalDateTime = {""};
 
+        // פותח בורר תאריך ואחריו בורר שעה לבחירת מועד המשימה
         btnSetDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -316,6 +325,7 @@ public class TasksActivity extends BaseActivity {
         });
         builder.setNegativeButton("ביטול", null);
 
+        // טוען ילדים מ-Firestore לתוך ה-Spinner ואז פותח את הדיאלוג
         db.collection("users")
                 .whereEqualTo("familyCode", userFamilyCode)
                 .whereEqualTo("role", "ילד/ה")
@@ -346,6 +356,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // שומר משימה חדשה ב-Firestore
     private void saveTask(String title, String cUid, String cName, String time) {
         Map<String, Object> task = new HashMap<>();
         task.put("taskName",       title);
@@ -364,6 +375,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // מסמן משימה כהושלמה ב-Firestore ומציג הודעת עידוד
     private void markTaskDone(String taskId) {
         db.collection("tasks").document(taskId)
                 .update("isDone", true)
@@ -381,6 +393,7 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // מוחק משימה מ-Firestore
     private void deleteTask(String taskId) {
         db.collection("tasks").document(taskId).delete()
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -391,10 +404,12 @@ public class TasksActivity extends BaseActivity {
                 });
     }
 
+    // אדפטר פנימי לרשימת המשימות – מציג כל משימה עם שם, נמען, זמן, צ'קבוקס ומחיקה להורה
     private class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.ViewHolder> {
         private final List<Task> list;
         TaskAdapter(List<Task> list) { this.list = list; }
 
+        // יוצר תצוגת משימה חדשה מה-layout המתאים
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -403,6 +418,7 @@ public class TasksActivity extends BaseActivity {
             return new ViewHolder(view);
         }
 
+        // ממלא את פרטי המשימה: שם, נמען, זמן, פס צבע לפי עיכוב, צ'קבוקס ומחיקה להורה
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Task task = list.get(position);
@@ -418,6 +434,7 @@ public class TasksActivity extends BaseActivity {
                 try { overdue = sdf.parse(task.getDateTime()).before(new Date()); }
                 catch (Exception ignored) {}
             }
+            // פס אדום אם המשימה באיחור, חום אם לא
             holder.priorityStripe.setBackgroundColor(overdue ? 0xFFE53935 : 0xFF6D4C41);
             holder.tvPriorityLabel.setVisibility(View.GONE);
 
@@ -435,6 +452,7 @@ public class TasksActivity extends BaseActivity {
             holder.cbTaskDone.setChecked(task.isDone());
             holder.cbTaskDone.setEnabled(canDone && !task.isDone());
 
+            // מסמן משימה כהושלמה בלחיצה על הצ'קבוקס
             if (canDone && !task.isDone()) {
                 holder.cbTaskDone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
@@ -444,6 +462,7 @@ public class TasksActivity extends BaseActivity {
                 });
             }
 
+            // לחיצה ארוכה למחיקת משימה – להורים בלבד
             if ("הורה".equals(userRole)) {
                 holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
@@ -470,6 +489,7 @@ public class TasksActivity extends BaseActivity {
         @Override
         public int getItemCount() { return list.size(); }
 
+        // מחזיק את ה-views של משימה בודדת ברשימה
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvTitle, tvAssignee, tvTime, tvPriorityLabel;
             View     priorityStripe;

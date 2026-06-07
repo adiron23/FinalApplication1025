@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 public class FamilyGatewayActivity extends AppCompatActivity {
 
     private CardView btnCreateFamily, btnJoinFamily;
@@ -35,6 +36,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
     private static final String PREFS_NAME       = "family_prefs";
     private static final String KEY_PENDING_CODE = "pending_family_code";
 
+    // מאתחל את המסך: בודק אם הגיע קוד משפחה מקישור, מטפל בהתחברות ומגדיר כפתורי יצירה/הצטרפות
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +89,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
         });
     }
 
+    // פותח דיאלוג להזנת קוד משפחה ידני ומתחיל את תהליך ההצטרפות
     private void showJoinCodeDialog() {
         EditText input = new EditText(this);
         input.setHint("הכנס קוד משפחתי");
@@ -107,6 +110,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 .show();
     }
 
+    // מתחיל תהליך הצטרפות למשפחה לפי קוד: מוודא שהמשפחה קיימת, בודק מקומות פנויים ומזהה את המשתמש
     private void startJoinFlow(String code) {
         setLoading(true);
 
@@ -185,6 +189,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 });
     }
 
+    // מנסה להתאים אוטומטית את המשתמש לפי שמו – אם נמצאה התאמה מציג אישור, אחרת פותח בחירה ידנית
     private void resolveClaimForUser(String code, String myName, List<String> unclaimed) {
         if (unclaimed.isEmpty()) {
             new AlertDialog.Builder(this)
@@ -233,6 +238,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
         }
     }
 
+    // מציג רשימת מקומות פנויים במשפחה לבחירה ידנית של המשתמש
     private void showClaimPickerDialog(String code, List<String> unclaimed) {
         String[] displayLabels = new String[unclaimed.size()];
         for (int i = 0; i < unclaimed.size(); i++) {
@@ -256,6 +262,7 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 .show();
     }
 
+    // שומר את קוד המשפחה והתפקיד שנבחר ב-Firestore ומעביר למסך הראשי
     private void claimSlot(String code, String role) {
         setLoading(true);
         db.collection("users").document(uid)
@@ -279,12 +286,14 @@ public class FamilyGatewayActivity extends AppCompatActivity {
                 });
     }
 
+    // מציג או מסתיר את אנימציית הטעינה ומנטרל/מפעיל את הכפתורים בהתאם
     private void setLoading(boolean loading) {
-        if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (progressBar     != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
         if (btnCreateFamily != null) btnCreateFamily.setEnabled(!loading);
         if (btnJoinFamily   != null) btnJoinFamily.setEnabled(!loading);
     }
 
+    // מחלץ קוד משפחה מקישור עמוק (deep link) מסוג familyapp://join?code=...
     private String extractCodeFromIntent(Intent intent) {
         Uri data = intent.getData();
         if (data != null
@@ -296,16 +305,19 @@ public class FamilyGatewayActivity extends AppCompatActivity {
         return null;
     }
 
+    // שומר קוד משפחה ממתין ב-SharedPreferences למקרה שהמשתמש עוד לא מחובר
     private void savePendingCode(String code) {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .edit().putString(KEY_PENDING_CODE, code).apply();
     }
 
+    // טוען קוד משפחה ממתין מה-SharedPreferences
     private String loadPendingCode() {
         return getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .getString(KEY_PENDING_CODE, null);
     }
 
+    // מוחק את קוד המשפחה הממתין מה-SharedPreferences
     private void clearPendingCode() {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .edit().remove(KEY_PENDING_CODE).apply();

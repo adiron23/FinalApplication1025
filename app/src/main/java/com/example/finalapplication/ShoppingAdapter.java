@@ -11,28 +11,33 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
+// אדפטר לרשימת הקניות – מציג פריטים עם צ'קבוקס, שם מוסיף, מיועד ל, ומחיקה בלחיצה ארוכה להורים
 public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHolder> {
 
     private List<ShoppingItem> items;
     private boolean isParent;
     private ShoppingListener listener;
 
+    // ממשק להאזנה לאירועים: סימון/ביטול פריט ובקשת מחיקה
     public interface ShoppingListener {
         void onCheckedChanged(ShoppingItem item, boolean checked);
         void onDeleteRequested(ShoppingItem item);
     }
 
+    // קונסטרקטור – מקבל את רשימת הפריטים, תפקיד המשתמש ומאזין לאירועים
     public ShoppingAdapter(List<ShoppingItem> items, boolean isParent, ShoppingListener listener) {
-        this.items = items;
+        this.items    = items;
         this.isParent = isParent;
         this.listener = listener;
     }
 
+    // מעדכן האם המשתמש הנוכחי הוא הורה ומרענן את הרשימה
     public void setIsParent(boolean isParent) {
         this.isParent = isParent;
         notifyDataSetChanged();
     }
 
+    // יוצר תצוגת פריט חדשה מה-layout המתאים
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -40,13 +45,13 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
         return new ViewHolder(view);
     }
 
+    // ממלא את פרטי הפריט בתצוגה: שם (עם קו חוצה אם נקנה), מוסיף, מיועד ל, צ'קבוקס ומחיקה
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ShoppingItem item = items.get(position);
 
         holder.tvName.setText(item.getName());
 
-        // Strikethrough and grey out when item is bought
         if (item.isChecked()) {
             holder.tvName.setPaintFlags(holder.tvName.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.tvName.setTextColor(0xFFAAAAAA);
@@ -70,6 +75,7 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
         holder.checkBox.setOnCheckedChangeListener(null);
         holder.checkBox.setChecked(item.isChecked());
 
+        // מעדכן את מצב הסימון של הפריט ומודיע למאזין
         holder.checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,7 +85,7 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
             }
         });
 
-        // Long press to delete — parents only
+        // לחיצה ארוכה למחיקת פריט – זמין להורים בלבד
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -91,11 +97,15 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
         });
     }
 
+    // מעדכן את הרשימה בצורה חכמה עם DiffUtil כדי לרנדר רק את השינויים
     public void updateItems(List<ShoppingItem> newItems) {
         DiffUtil.DiffResult result = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            // מחזיר את גודל הרשימה הישנה
             @Override public int getOldListSize() { return items.size(); }
+            // מחזיר את גודל הרשימה החדשה
             @Override public int getNewListSize() { return newItems.size(); }
 
+            // בודק האם שני פריטים מייצגים את אותו מסמך לפי ID
             @Override
             public boolean areItemsTheSame(int oldPos, int newPos) {
                 String oldId = items.get(oldPos).getId();
@@ -103,16 +113,18 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
                 return oldId != null && oldId.equals(newId);
             }
 
+            // בודק האם תוכן הפריטים זהה (סימון, שם, מוסיף, מיועד)
             @Override
             public boolean areContentsTheSame(int oldPos, int newPos) {
                 ShoppingItem o = items.get(oldPos);
                 ShoppingItem n = newItems.get(newPos);
                 return o.isChecked() == n.isChecked()
-                        && areStringsEqual(o.getName(), n.getName())
-                        && areStringsEqual(o.getCreatedBy(), n.getCreatedBy())
+                        && areStringsEqual(o.getName(),           n.getName())
+                        && areStringsEqual(o.getCreatedBy(),      n.getCreatedBy())
                         && areStringsEqual(o.getAssignedToName(), n.getAssignedToName());
             }
 
+            // פונקציית עזר להשוואת מחרוזות תוך טיפול ב-null
             private boolean areStringsEqual(String s1, String s2) {
                 return s1 == null ? s2 == null : s1.equals(s2);
             }
@@ -122,21 +134,23 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.ViewHo
         result.dispatchUpdatesTo(this);
     }
 
+    // מחזיר את מספר הפריטים ברשימה
     @Override
     public int getItemCount() {
         return items != null ? items.size() : 0;
     }
 
+    // מחזיק את ה-views של פריט בודד ברשימה
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvCreatedBy, tvAssignedTo;
         CheckBox checkBox;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvItemName);
-            tvCreatedBy = itemView.findViewById(R.id.tvCreatedBy);
+            tvName       = itemView.findViewById(R.id.tvItemName);
+            tvCreatedBy  = itemView.findViewById(R.id.tvCreatedBy);
             tvAssignedTo = itemView.findViewById(R.id.tvAssignedTo);
-            checkBox = itemView.findViewById(R.id.checkItem);
+            checkBox     = itemView.findViewById(R.id.checkItem);
         }
     }
 }

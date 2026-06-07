@@ -16,17 +16,20 @@ public class BaseActivity extends AppCompatActivity {
 
     protected BottomNavigationView bottomNavigationView;
 
+    // מאתחל את האקטיביטי הבסיסית
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
+    // מתבצע בכל פעם שהאקטיביטי חוזרת למסך – מעדכן את הכפתור המסומן בתפריט התחתון
     @Override
     protected void onResume() {
         super.onResume();
         updateBottomMenuSelection();
     }
 
+    // טוען את ה-layout של המסך הספציפי לתוך ה-BaseActivity ומאתחל את הניווט התחתון
     protected void setContentViewAndBind(int layoutResID) {
         super.setContentView(R.layout.activity_base);
 
@@ -36,6 +39,7 @@ public class BaseActivity extends AppCompatActivity {
         setupBottomNavigation();
     }
 
+    // מגדיר את התפריט התחתון ומטפל בלחיצות על הכפתורים – מנווט למסך המתאים
     private void setupBottomNavigation() {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         if (bottomNavigationView != null) {
@@ -71,6 +75,7 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
+    // מעדכן איזה כפתור בתפריט התחתון מסומן לפי האקטיביטי הנוכחית
     private void updateBottomMenuSelection() {
         if (bottomNavigationView == null) {
             bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -90,6 +95,7 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
+    // מנתק את המשתמש מ-Firebase ומעביר אותו למסך ההתחברות
     protected void logoutUser() {
         FirebaseAuth.getInstance().signOut();
         Intent intent = new Intent(this, LogInActivity.class);

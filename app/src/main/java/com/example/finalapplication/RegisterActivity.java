@@ -58,14 +58,15 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth      refAuth;
     private FirebaseFirestore db;
 
-    private Uri    selectedImageUri   = null;
-    private String selectedAvatarName = null;
-    private Uri    cameraPhotoUri     = null;
+    private Uri    selectedImageUri;
+    private String selectedAvatarName;
+    private Uri    cameraPhotoUri;
 
     private ActivityResultLauncher<String[]> galleryLauncher;
     private ActivityResultLauncher<Uri>      cameraLauncher;
     private GoogleSignInClient mGoogleSignInClient;
 
+    // בודק בתחילת המסך אם המשתמש כבר מחובר ומנתב אותו בהתאם
     @Override
     protected void onStart() {
         super.onStart();
@@ -75,6 +76,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    // מאתחל את מסך ההרשמה: מגדיר משגרי מצלמה וגלריה, מחבר views, מגדיר כפתורים ובורר תאריך לידה
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -184,6 +186,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    // מציג דיאלוג לבחירת מקור תמונת פרופיל: מצלמה, גלריה או אווטאר
     private void showImageSourceChooser() {
         String[] options = {"צלם תמונה", "בחר מהגלריה", "בחר אווטאר"};
         new AlertDialog.Builder(this)
@@ -199,6 +202,7 @@ public class RegisterActivity extends AppCompatActivity {
                 .show();
     }
 
+    // יוצר קובץ תמונה זמני ופותח את מצלמת המכשיר לצילום
     private void launchCamera() {
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
@@ -212,6 +216,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    // מציג גלילה אופקית של אווטארים לבחירה ומעדכן את תמונת הפרופיל בהתאם
     private void showAvatarPicker() {
         HorizontalScrollView scrollView = new HorizontalScrollView(this);
         scrollView.setPadding(16, 24, 16, 16);
@@ -268,6 +273,7 @@ public class RegisterActivity extends AppCompatActivity {
         holder[0].show();
     }
 
+    // בודק ב-Firestore אם למשתמש קיים קוד משפחה ומנתב למסך הראשי או מסך המשפחה
     private void checkUserStatusAndNavigate(String uid) {
         FirebaseFirestore.getInstance().collection("users").document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -284,6 +290,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
+    // מקבל את תוצאת התחברות Google ומעביר לאימות מול Firebase
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -298,6 +305,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
     }
 
+    // מבצע אימות Google מול Firebase – אם משתמש חדש שומר ב-Firestore, אחרת מנתב ישירות
     private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
         ProgressDialog pd = new ProgressDialog(this);
         pd.setMessage("מתחבר...");
@@ -329,6 +337,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
+    // שומר משתמש Google חדש ב-Firestore ומעביר למסך המשפחה
     private void saveGoogleUserToFirestore(String uid, String email, String name) {
         Map<String, Object> userData = new HashMap<>();
         userData.put("uid",        uid);
@@ -357,6 +366,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
+    // מאמת את שדות הטופס ויוצר משתמש חדש ב-Firebase Auth
     private void registerUser() {
         String email = eTEmail.getText().toString().trim();
         String pass  = eTPass.getText().toString().trim();
@@ -388,6 +398,7 @@ public class RegisterActivity extends AppCompatActivity {
                 });
     }
 
+    // שומר את פרטי המשתמש החדש (כולל תמונה/אווטאר) ב-Firestore ומעביר למסך המשפחה
     private void saveUserToFirestore(String uid, String email, String name,
                                      String birth, ProgressDialog pd) {
         String imageValue = "";

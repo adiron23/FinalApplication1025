@@ -33,6 +33,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String uid;
 
+    // מאתחל את המסך: מחבר views, מגדיר כפתורים ומוסיף שדה ילד ראשון ריק
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,8 +45,8 @@ public class CreateFamilyActivity extends AppCompatActivity {
 
         childrenFieldsContainer = findViewById(R.id.childrenFieldsContainer);
         eTFamilyName = findViewById(R.id.eTFamilyName);
-        eTParent1 = findViewById(R.id.eTParent1);
-        eTParent2 = findViewById(R.id.eTParent2);
+        eTParent1    = findViewById(R.id.eTParent1);
+        eTParent2    = findViewById(R.id.eTParent2);
 
         findViewById(R.id.btnAddChild).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,6 +64,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
         addChildField();
     }
 
+    // מוסיף שדה טקסט חדש להזנת שם ילד נוסף
     private void addChildField() {
         TextInputLayout childLayout = (TextInputLayout) getLayoutInflater()
                 .inflate(R.layout.item_child_field, childrenFieldsContainer, false);
@@ -71,10 +73,11 @@ public class CreateFamilyActivity extends AppCompatActivity {
         if (editText != null) childrenEdits.add(editText);
     }
 
+    // אוסף את פרטי המשפחה מהטופס, יוצר קוד משפחה ייחודי ושומר ב-Firestore
     private void saveFamily() {
         String famName = eTFamilyName.getText().toString().trim();
-        String p1 = eTParent1.getText().toString().trim();
-        String p2 = eTParent2.getText().toString().trim();
+        String p1      = eTParent1.getText().toString().trim();
+        String p2      = eTParent2.getText().toString().trim();
 
         if (famName.isEmpty() || p1.isEmpty()) {
             Toast.makeText(this, "נא למלא שם משפחה והורה 1", Toast.LENGTH_SHORT).show();
@@ -93,11 +96,11 @@ public class CreateFamilyActivity extends AppCompatActivity {
         String code = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
         Map<String, Object> familyData = new HashMap<>();
-        familyData.put("familyName", famName);
-        familyData.put("familyCode", code);
+        familyData.put("familyName",     famName);
+        familyData.put("familyCode",     code);
         familyData.put("availableRoles", roles);
 
-        final String finalCode = code;
+        final String finalCode      = code;
         final List<String> finalRoles = roles;
 
         db.collection("families").document(code).set(familyData)
@@ -115,6 +118,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
                 });
     }
 
+    // מזהה את תפקיד המשתמש הנוכחי לפי שמו ברשימת התפקידים ומעדכן את פרטיו ב-Firestore
     private void identifyAndSetUserRole(String code, List<String> roles) {
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -152,6 +156,7 @@ public class CreateFamilyActivity extends AppCompatActivity {
                 });
     }
 
+    // מציג דיאלוג עם קישור הצטרפות למשפחה – מאפשר שיתוף, העתקה או המשך בלי שיתוף
     private void showShareDialog(String code) {
         String link = "familyapp://join?code=" + code;
 

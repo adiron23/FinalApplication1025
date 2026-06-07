@@ -25,6 +25,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+
 public class LogInActivity extends AppCompatActivity {
 
     private static final int RC_GOOGLE_SIGN_IN = 9001;
@@ -34,6 +35,7 @@ public class LogInActivity extends AppCompatActivity {
     private Button btnLogin;
     private GoogleSignInClient mGoogleSignInClient;
 
+    // מאתחל את מסך ההתחברות: מחבר views, מגדיר כפתורים, מאזין לשינויים באימייל ומכין התחברות עם Google
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,6 +101,7 @@ public class LogInActivity extends AppCompatActivity {
         }
     }
 
+    // מאמת את שדות האימייל והסיסמה ומבצע התחברות ב-Firebase עם אימייל וסיסמה
     private void loginUser() {
         String email = eTEmail.getText().toString().trim();
         String pass  = eTPass.getText().toString().trim();
@@ -131,6 +134,7 @@ public class LogInActivity extends AppCompatActivity {
                 });
     }
 
+    // מקבל את תוצאת התחברות Google ומעביר את ה-token לאימות מול Firebase
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -145,6 +149,7 @@ public class LogInActivity extends AppCompatActivity {
         }
     }
 
+    // מבצע אימות מול Firebase באמצעות ה-token של Google
     private void firebaseAuthWithGoogle(String idToken) {
         ProgressDialog pd = new ProgressDialog(this);
         pd.setMessage("מתחבר...");
@@ -166,6 +171,7 @@ public class LogInActivity extends AppCompatActivity {
                 });
     }
 
+    // לאחר התחברות מוצלחת – מנתב למסך הראשי או למסך המשפחה אם יש קוד ממתין
     private void navigateAfterLogin() {
         String pendingCode = getSharedPreferences("family_prefs", MODE_PRIVATE)
                 .getString("pending_family_code", null);
@@ -176,6 +182,7 @@ public class LogInActivity extends AppCompatActivity {
         finish();
     }
 
+    // פותח דיאלוג לאיפוס סיסמה – שולח מייל איפוס לכתובת שהוזנה
     private void showPasswordResetDialog() {
         String currentEmail = eTEmail.getText().toString().trim();
 

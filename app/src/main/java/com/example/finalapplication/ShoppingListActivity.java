@@ -46,6 +46,7 @@ public class ShoppingListActivity extends BaseActivity {
     private final List<String> memberNames = new ArrayList<>();
     private final List<String> memberUids  = new ArrayList<>();
 
+    // מאתחל את המסך: מחבר views, מגדיר אדפטר עם האזנה לסימון ומחיקה, וטוען נתוני משתמש
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +64,7 @@ public class ShoppingListActivity extends BaseActivity {
         tvEmpty        = findViewById(R.id.tvEmpty);
 
         adapter = new ShoppingAdapter(new ArrayList<>(), false, new ShoppingAdapter.ShoppingListener() {
+            // מעדכן מצב סימון הפריט ב-Firestore
             @Override
             public void onCheckedChanged(ShoppingItem item, boolean checked) {
                 if (item.getId() != null) {
@@ -71,6 +73,7 @@ public class ShoppingListActivity extends BaseActivity {
                 }
             }
 
+            // מציג דיאלוג אישור מחיקת פריט בלחיצה ארוכה
             @Override
             public void onDeleteRequested(ShoppingItem item) {
                 new AlertDialog.Builder(ShoppingListActivity.this)
@@ -113,6 +116,7 @@ public class ShoppingListActivity extends BaseActivity {
         });
     }
 
+    // טוען את פרטי המשתמש מ-Firestore, קובע הרשאות תצוגה לפי תפקיד/גיל ומתחיל האזנה לרשימה
     private void loadUserDataAndListen() {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) return;
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -144,6 +148,7 @@ public class ShoppingListActivity extends BaseActivity {
                 });
     }
 
+    // מאזין בזמן אמת לשינויים ברשימת הקניות של המשפחה ומעדכן את האדפטר
     private void listenToShoppingList() {
         db.collection("shopping_lists")
                 .whereEqualTo("familyCode", familyCode)
@@ -163,6 +168,7 @@ public class ShoppingListActivity extends BaseActivity {
                 });
     }
 
+    // טוען את רשימת חברי המשפחה מ-Firestore לצורך הקצאת פריטים
     private void loadFamilyMembers() {
         db.collection("users")
                 .whereEqualTo("familyCode", familyCode)
@@ -185,6 +191,7 @@ public class ShoppingListActivity extends BaseActivity {
                 });
     }
 
+    // פותח דיאלוג לבחירת נמען ומוסיף את הפריט החדש ל-Firestore
     private void addItem() {
         String name = etNewItem.getText().toString().trim();
         if (name.isEmpty()) return;
@@ -230,6 +237,7 @@ public class ShoppingListActivity extends BaseActivity {
                 .show();
     }
 
+    // מוחק פריט בודד מ-Firestore
     private void deleteItem(ShoppingItem item) {
         db.collection("shopping_lists").document(item.getId()).delete()
                 .addOnFailureListener(new OnFailureListener() {
@@ -241,6 +249,7 @@ public class ShoppingListActivity extends BaseActivity {
                 });
     }
 
+    // מחשב את גיל המשתמש מתאריך הלידה שלו
     private int ageFromBirthDate(String birthDate) {
         if (birthDate == null || birthDate.isEmpty()) return -1;
         try {
@@ -256,6 +265,7 @@ public class ShoppingListActivity extends BaseActivity {
         }
     }
 
+    // מוחק מ-Firestore את כל הפריטים שסומנו כנקנו
     private void clearBoughtItems() {
         if (familyCode == null) return;
         db.collection("shopping_lists")

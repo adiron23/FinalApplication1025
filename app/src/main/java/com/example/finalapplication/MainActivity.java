@@ -38,6 +38,7 @@ public class MainActivity extends BaseActivity {
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy HH:mm", Locale.getDefault());
 
+    // מאתחל את המסך הראשי: מחבר views, מגדיר כפתורי ניווט לכל הווידג'טים, טוען פרטי משתמש ומרשם מאזין לרשת
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +87,7 @@ public class MainActivity extends BaseActivity {
         registerReceiver(connectionReceiver, filter);
     }
 
+    // בכל חזרה למסך – מרענן את שלושת הווידג'טים (משימות, אירועים, קניות)
     @Override
     protected void onResume() {
         super.onResume();
@@ -96,14 +98,16 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    // מחזיר ברכה מתאימה לשעת היום (בוקר/צהריים/ערב/לילה)
     private String getTimeGreeting() {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        if (hour >= 5 && hour < 12)  return "בוקר טוב";
+        if (hour >= 5  && hour < 12) return "בוקר טוב";
         if (hour >= 12 && hour < 17) return "צהריים טובים";
         if (hour >= 17 && hour < 21) return "ערב טוב";
         return "לילה טוב";
     }
 
+    // טוען את פרטי המשתמש ושם המשפחה מ-Firestore ומציג ברכה מותאמת אישית
     private void loadInfo() {
         db.collection("users").document(uid).get()
                 .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -147,6 +151,7 @@ public class MainActivity extends BaseActivity {
                 });
     }
 
+    // טוען עד 3 משימות לא גמורות מ-Firestore (לפי תפקיד) וממיין לפי תאריך
     private void loadTasksWidget() {
         Query query = isParent
                 ? db.collection("tasks").whereEqualTo("familyCode", userFamilyCode)
@@ -167,7 +172,7 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public int compare(Task a, Task b) {
                         try {
-                            Date da = a.getDateTime() != null ? sdf.parse(a.getDateTime()) : null;
+                            Date da  = a.getDateTime() != null ? sdf.parse(a.getDateTime()) : null;
                             Date db2 = b.getDateTime() != null ? sdf.parse(b.getDateTime()) : null;
                             if (da == null) return 1;
                             if (db2 == null) return -1;
@@ -200,6 +205,7 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    // מוסיף שורת משימה לווידג'ט – כולל שם, עדיפות, תאריך ואם פג תוקף מסמן באדום
     private void addTaskRow(Task task, boolean showDivider) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
@@ -252,6 +258,7 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    // טוען את אירועי היום הנוכחי מ-Firestore וממיין לפי חותמת זמן
     private void loadTodayEventsWidget() {
         Calendar c = Calendar.getInstance();
         String today = String.format(Locale.US, "%04d-%02d-%02d",
@@ -300,6 +307,7 @@ public class MainActivity extends BaseActivity {
                 });
     }
 
+    // מוסיף שורת אירוע לווידג'ט – כולל פס צבעוני, כותרת, שעה ושם המוסיף
     private void addEventRow(String title, String author, String time, boolean showDivider) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
@@ -356,6 +364,7 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    // טוען עד 3 פריטי קנייה שלא סומנו מ-Firestore ומציג אותם בווידג'ט
     private void loadShoppingWidget() {
         db.collection("shopping_lists")
                 .whereEqualTo("familyCode", userFamilyCode)
@@ -386,6 +395,7 @@ public class MainActivity extends BaseActivity {
                 });
     }
 
+    // מוסיף שורת פריט קנייה לווידג'ט – כולל שם ושם המיועד אם קיים
     private void addShoppingRow(ShoppingItem item, boolean showDivider) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
@@ -418,6 +428,7 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    // מבטל את הרשמת מאזין הרשת כשהמסך נסגר כדי למנוע דליפת זיכרון
     @Override
     protected void onDestroy() {
         super.onDestroy();

@@ -6,8 +6,10 @@ import android.os.Handler;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 
+// מסך פתיחה (Splash) – מוצג בעת הפעלת האפליקציה ומנתב למסך המתאים אחרי 2.5 שניות
 public class SplashActivity extends AppCompatActivity {
 
+    // מאתחל את מסך הפתיחה וממתין 2.5 שניות לפני מעבר למסך הראשי או מסך ההתחברות
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
